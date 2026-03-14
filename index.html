@@ -788,7 +788,7 @@ function showToast(msg){
 async function signInWithGoogle(){
   const {error}=await supabaseClient.auth.signInWithOAuth({
     provider:'google',
-    options:{redirectTo:window.location.origin+window.location.pathname}
+    options:{redirectTo:'https://oshi-chat.vercel.app/'}
   });
   if(error)showToast('ログインに失敗しました');
 }
