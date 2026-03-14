@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>推しとのトキメキ</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10,332 +10,313 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{font-family:'Zen Kaku Gothic New',sans-serif;background:#0d0a1a;color:#f0eaff;min-height:100vh;overflow-x:hidden}
-:root{--pink:#e8a0c4;--lav:#b9acdf;--card:#1e1540;--bdr:rgba(184,172,223,0.18);--mu:#2a1f5a;--mo:#1e1540}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Zen Kaku Gothic New',sans-serif;background:#0d0818;color:#f5eeff;overscroll-behavior:none}
+:root{
+  --rose:#e8547a;--coral:#ff6b9d;--pink:#f0a0c0;--lav:#c4a8e0;
+  --dark:#0d0818;--dark2:#160d28;--card:#1e1035;--card2:#251440;
+  --bdr:rgba(232,160,196,0.18);--mu:#2a1550;--mo:#1e1035;
+  --grad:linear-gradient(135deg,#e8547a,#c97ab0,#8b73c9);
+}
 
+/* ── Stars ── */
 .stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
-.star{position:absolute;border-radius:50%;background:#f0eaff;animation:twinkle var(--d,3s) ease-in-out infinite alternate}
-@keyframes twinkle{0%{opacity:.1;transform:scale(.8)}100%{opacity:.7;transform:scale(1.2)}}
+.star{position:absolute;border-radius:50%;background:#f5eeff;animation:twinkle var(--d,3s) ease-in-out infinite alternate}
+@keyframes twinkle{0%{opacity:.08;transform:scale(.8)}100%{opacity:.6;transform:scale(1.2)}}
 
-.screen{display:none;min-height:100vh;flex-direction:column}
+/* ── Screens ── */
+.screen{display:none;position:fixed;inset:0;z-index:1;flex-direction:column}
 .screen.active{display:flex}
 
+/* ── LP ── */
+#lpScreen{overflow:hidden}
+.lp-nav{position:absolute;top:0;left:0;right:0;z-index:10;padding:1rem 1.25rem;display:flex;justify-content:flex-end;align-items:center}
+.login-link{background:none;border:1px solid rgba(232,160,196,.3);border-radius:20px;color:var(--lav);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.75rem;padding:.32rem .85rem;cursor:pointer;transition:all .2s;letter-spacing:.04em}
+.login-link:hover{border-color:var(--rose);color:var(--pink)}
+.demo-bg{position:absolute;inset:0;filter:blur(4px) brightness(.28) saturate(1.3);pointer-events:none;overflow:hidden}
+.db{position:absolute;border-radius:18px;padding:.6rem .95rem;font-size:.82rem;line-height:1.6;max-width:195px;color:#f5eeff;animation:dbf var(--d,5s) ease-in-out infinite alternate}
+.db.oshi{background:var(--mo);border:1px solid var(--bdr);border-top-left-radius:3px}
+.db.user{background:var(--mu);border:1px solid rgba(184,172,223,.12);border-top-right-radius:3px}
+@keyframes dbf{0%{transform:translateY(0) rotate(var(--r,0deg));opacity:.9}100%{transform:translateY(var(--ty,-8px)) rotate(var(--r,0deg));opacity:.65}}
+.lp-center{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:2rem 1.5rem;text-align:center}
+.lp-badge{font-size:.66rem;letter-spacing:.22em;color:var(--lav);opacity:.7;margin-bottom:1.3rem;display:flex;align-items:center;gap:.6rem}
+.lp-badge::before,.lp-badge::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(196,168,224,.3),transparent);max-width:56px}
+.lp-title{font-family:'Noto Serif JP',serif;font-weight:300;font-size:clamp(1.65rem,6.5vw,2.5rem);line-height:1.55;letter-spacing:.07em;margin-bottom:.6rem}
+.lp-title .grad{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.lp-sub{font-size:.8rem;color:var(--lav);opacity:.72;letter-spacing:.06em;margin-bottom:2.5rem;line-height:1.9}
+.lp-btn{padding:1rem 2.8rem;border:none;border-radius:50px;background:var(--grad);color:#fff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.97rem;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:opacity .2s,transform .15s,box-shadow .2s;box-shadow:0 4px 28px rgba(232,84,122,.45)}
+.lp-btn:hover{opacity:.9;transform:translateY(-2px);box-shadow:0 8px 36px rgba(232,84,122,.6)}
+.lp-btn:active{transform:translateY(0)}
+.lp-footer{position:absolute;bottom:0;left:0;right:0;z-index:5;padding:.9rem;display:flex;justify-content:center;gap:1.8rem}
+.lp-foot-link{font-size:.66rem;color:rgba(196,168,224,.38);text-decoration:none;cursor:pointer;transition:color .2s}
+.lp-foot-link:hover{color:var(--lav)}
+
 /* ── Setup ── */
-.setup-scroll{overflow-y:auto;flex:1}
-.setup-inner{position:relative;z-index:1;max-width:600px;margin:0 auto;padding:2rem 1.25rem 5rem}
-.logo{text-align:center;margin-bottom:2rem}
-.logo-title{font-family:'Noto Serif JP',serif;font-size:2rem;font-weight:300;letter-spacing:.2em;background:linear-gradient(135deg,#e8a0c4,#b9acdf);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.logo-sub{font-size:.72rem;letter-spacing:.22em;color:var(--lav);margin-top:.45rem;opacity:.8}
-
-.section-title{font-size:.62rem;letter-spacing:.25em;color:var(--pink);text-transform:uppercase;margin:1.75rem 0 .75rem;display:flex;align-items:center;gap:.6rem}
-.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(232,160,196,.3),transparent)}
-
-.card{background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:1.25rem 1.35rem;margin-bottom:.75rem}
-.clabel{font-size:.62rem;letter-spacing:.2em;color:var(--lav);text-transform:uppercase;margin-bottom:.65rem;display:flex;align-items:center;gap:.5rem}
-.clabel::before{content:'';display:inline-block;width:12px;height:1px;background:var(--lav);opacity:.5}
-
-input[type=text],select,textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:10px;color:#f0eaff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.88rem;padding:.65rem .95rem;outline:none;transition:border-color .2s}
-input[type=text]:focus,select:focus,textarea:focus{border-color:var(--pink)}
-select option{background:#1a1133}
+#setupScreen{background:var(--dark)}
+.setup-hdr{padding:.85rem 1.1rem;display:flex;align-items:center;gap:.6rem;border-bottom:1px solid var(--bdr);flex-shrink:0;background:rgba(13,8,24,.8);backdrop-filter:blur(10px)}
+.back-btn{background:none;border:none;color:var(--lav);cursor:pointer;font-size:.95rem;padding:.2rem .4rem;transition:color .2s;line-height:1;opacity:.8}
+.back-btn:hover{color:var(--rose);opacity:1}
+.setup-hdr-title{font-family:'Noto Serif JP',serif;font-size:.92rem;font-weight:400;letter-spacing:.12em;flex:1;text-align:center;opacity:.9}
+.setup-scroll{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.setup-inner{max-width:520px;margin:0 auto;padding:1.4rem 1.1rem 5.5rem}
+.qs-label{font-size:.6rem;letter-spacing:.24em;color:var(--rose);text-transform:uppercase;margin:1.35rem 0 .6rem;display:flex;align-items:center;gap:.55rem}
+.qs-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(232,84,122,.3),transparent)}
+.qcard{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:1.05rem 1.15rem;margin-bottom:.6rem}
+input[type=text],textarea,select{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:10px;color:#f5eeff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.87rem;padding:.62rem .88rem;outline:none;transition:border-color .2s}
+input[type=text]:focus,textarea:focus{border-color:rgba(232,84,122,.55)}
 textarea{resize:none;line-height:1.75}
-.ta-sm{min-height:65px}
-.ta-md{min-height:90px}
-
-.tag-row{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.4rem}
-.tag{padding:.3rem .8rem;border-radius:20px;border:1px solid var(--bdr);font-size:.78rem;cursor:pointer;transition:all .2s;background:transparent;color:var(--lav)}
-.tag.on{background:rgba(232,160,196,.15);border-color:var(--pink);color:var(--pink)}
-.tag:hover:not(.on){border-color:rgba(184,172,223,.5);color:#f0eaff}
-
-/* 感情パターン */
-.emotion-grid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-top:.4rem}
-.emotion-item label{font-size:.7rem;color:var(--lav);display:block;margin-bottom:.3rem}
-
-/* 思い出ピン */
-.pin-list{display:flex;flex-direction:column;gap:.4rem;margin-top:.5rem}
-.pin-item{display:flex;gap:.4rem;align-items:flex-start}
+.ta-sm{min-height:58px}.ta-md{min-height:78px}
+.name-row{display:flex;flex-direction:column;gap:.48rem}
+.tag-row{display:flex;flex-wrap:wrap;gap:.38rem}
+.tag{padding:.28rem .75rem;border-radius:20px;border:1px solid var(--bdr);font-size:.76rem;cursor:pointer;transition:all .2s;background:transparent;color:var(--lav)}
+.tag.on{background:rgba(232,84,122,.15);border-color:var(--rose);color:var(--rose)}
+.tag:hover:not(.on){border-color:rgba(240,160,192,.45);color:#f5eeff}
+.detail-toggle{width:100%;padding:.72rem;background:none;border:1px dashed rgba(196,168,224,.18);border-radius:10px;color:rgba(196,168,224,.55);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.78rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:all .2s;margin:1rem 0 .4rem;letter-spacing:.04em}
+.detail-toggle:hover{border-color:rgba(232,84,122,.4);color:var(--rose)}
+.detail-toggle .arr{transition:transform .3s;font-size:.6rem;opacity:.7}
+.detail-toggle.open .arr{transform:rotate(180deg)}
+.detail-section{display:none}.detail-section.open{display:block}
+.emotion-grid{display:grid;grid-template-columns:1fr 1fr;gap:.48rem;margin-top:.38rem}
+.emotion-item label{font-size:.65rem;color:var(--lav);opacity:.8;display:block;margin-bottom:.22rem}
+.pin-list{display:flex;flex-direction:column;gap:.38rem;margin-top:.42rem}
+.pin-item{display:flex;gap:.32rem;align-items:flex-start}
 .pin-item input{flex:1}
-.pin-del{width:30px;height:34px;flex-shrink:0;background:none;border:1px solid var(--bdr);border-radius:8px;color:var(--lav);cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:border-color .2s}
+.pin-del{width:30px;height:34px;flex-shrink:0;background:none;border:1px solid var(--bdr);border-radius:8px;color:var(--lav);cursor:pointer;font-size:.82rem;display:flex;align-items:center;justify-content:center;transition:border-color .2s}
 .pin-del:hover{border-color:#f08080;color:#f08080}
-.add-pin-btn{margin-top:.5rem;background:none;border:1px dashed var(--bdr);border-radius:8px;color:var(--lav);font-size:.78rem;padding:.4rem .8rem;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:border-color .2s;width:100%}
-.add-pin-btn:hover{border-color:var(--pink);color:var(--pink)}
-
-.start-btn{width:100%;padding:1rem;border:none;border-radius:12px;background:linear-gradient(135deg,#c97ab0,#8b73c9);color:#fff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.1em;cursor:pointer;margin-top:1.5rem;transition:opacity .2s,transform .15s}
+.add-pin-btn{margin-top:.38rem;background:none;border:1px dashed var(--bdr);border-radius:8px;color:var(--lav);font-size:.73rem;padding:.32rem .7rem;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:border-color .2s;width:100%}
+.add-pin-btn:hover{border-color:var(--rose);color:var(--rose)}
+.start-btn{width:100%;padding:1rem;border:none;border-radius:50px;background:var(--grad);color:#fff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.1em;cursor:pointer;margin-top:1.5rem;transition:opacity .2s,transform .15s,box-shadow .2s;box-shadow:0 4px 22px rgba(232,84,122,.38)}
 .start-btn:hover{opacity:.9;transform:translateY(-1px)}
 
 /* ── Chat ── */
-.chat-header{position:sticky;top:0;z-index:10;background:rgba(13,10,26,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--bdr);padding:.85rem 1.1rem;display:flex;align-items:center;gap:.75rem}
-.char-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#c97ab0,#8b73c9);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-family:'Noto Serif JP',serif;flex-shrink:0;position:relative}
-.char-av::after{content:'';position:absolute;inset:-2px;border-radius:50%;border:1px solid rgba(232,160,196,.3)}
-.char-info .cname{font-size:.95rem;font-weight:700;font-family:'Noto Serif JP',serif}
-.char-info .cpersona{font-size:.68rem;color:var(--lav);margin-top:.12rem;opacity:.8}
-.hdr-btns{margin-left:auto;display:flex;gap:.4rem;flex-shrink:0}
-.hbtn{background:none;border:1px solid var(--bdr);color:var(--lav);border-radius:8px;padding:.3rem .65rem;font-size:.72rem;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .2s;white-space:nowrap}
-.hbtn:hover{border-color:var(--pink);color:var(--pink)}
-
-.messages{flex:1;overflow-y:auto;padding:1.25rem 1rem;display:flex;flex-direction:column;gap:.9rem}
-.messages::-webkit-scrollbar{width:3px}
-.messages::-webkit-scrollbar-thumb{background:rgba(184,172,223,.2);border-radius:4px}
-
-.msg{display:flex;gap:.55rem;max-width:86%;animation:msgIn .22s ease}
-@keyframes msgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+#chatScreen{background:var(--dark)}
+.chat-header{position:relative;z-index:10;background:rgba(13,8,24,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--bdr);padding:.72rem .95rem;display:flex;align-items:center;gap:.55rem;flex-shrink:0}
+.char-av{width:37px;height:37px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:.98rem;font-family:'Noto Serif JP',serif;flex-shrink:0;position:relative}
+.char-av::after{content:'';position:absolute;inset:-2px;border-radius:50%;border:1px solid rgba(232,84,122,.32)}
+.char-info{flex:1;min-width:0}
+.cname{font-size:.88rem;font-weight:700;font-family:'Noto Serif JP',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cpersona{font-size:.63rem;color:var(--lav);opacity:.72;margin-top:.1rem}
+.hdr-btns{display:flex;gap:.3rem;flex-shrink:0}
+.hbtn{background:none;border:1px solid var(--bdr);color:var(--lav);border-radius:8px;padding:.28rem .58rem;font-size:.68rem;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .2s;white-space:nowrap}
+.hbtn:hover{border-color:var(--rose);color:var(--rose)}
+.hbtn.save{background:rgba(232,84,122,.1);border-color:rgba(232,84,122,.4);color:var(--rose)}
+.hbtn.save:hover{background:rgba(232,84,122,.22)}
+.messages{flex:1;overflow-y:auto;padding:1rem .88rem;display:flex;flex-direction:column;gap:.75rem;-webkit-overflow-scrolling:touch}
+.messages::-webkit-scrollbar{width:2px}
+.messages::-webkit-scrollbar-thumb{background:rgba(196,168,224,.15);border-radius:4px}
+.msg{display:flex;gap:.48rem;max-width:88%;animation:msgIn .22s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .msg.user{align-self:flex-end;flex-direction:row-reverse}
-.mav{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700}
-.mav.oa{background:linear-gradient(135deg,#c97ab0,#8b73c9)}
-.mav.ua{background:rgba(255,255,255,.08);border:1px solid var(--bdr);color:var(--lav)}
-.bubble{padding:.65rem .95rem;border-radius:14px;font-size:.88rem;line-height:1.8;white-space:pre-wrap;word-break:break-word}
-.msg.oshi .bubble{background:var(--mo);border:1px solid var(--bdr);border-top-left-radius:3px}
-.msg.user .bubble{background:var(--mu);border:1px solid rgba(184,172,223,.15);border-top-right-radius:3px}
-
-/* pin button on oshi bubble */
-.pin-msg-btn{position:absolute;bottom:-9px;right:5px;width:20px;height:20px;border-radius:50%;background:rgba(232,160,196,.12);border:1px solid rgba(232,160,196,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;font-size:9px;color:var(--pink)}
-.msg.oshi .bubble{position:relative}
+.mav{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.63rem;font-weight:700}
+.mav.oa{background:var(--grad)}.mav.ua{background:rgba(255,255,255,.07);border:1px solid var(--bdr);color:var(--lav)}
+.bubble{padding:.58rem .88rem;border-radius:14px;font-size:.86rem;line-height:1.88;white-space:pre-wrap;word-break:break-word}
+.msg.oshi .bubble{background:var(--mo);border:1px solid var(--bdr);border-top-left-radius:3px;position:relative}
+.msg.user .bubble{background:var(--mu);border:1px solid rgba(184,172,223,.1);border-top-right-radius:3px}
+.pin-msg-btn{position:absolute;bottom:-8px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(232,84,122,.1);border:1px solid rgba(232,84,122,.28);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;font-size:9px;color:var(--rose)}
 .msg.oshi:hover .pin-msg-btn{opacity:1}
-.pin-msg-btn.pinned{opacity:1;background:rgba(232,160,196,.25)}
-
-.typing{display:flex;gap:4px;padding:.6rem .9rem}
+.pin-msg-btn.pinned{opacity:1;background:rgba(232,84,122,.25)}
+.typing{display:flex;gap:4px;padding:.52rem .8rem}
 .typing span{width:5px;height:5px;border-radius:50%;background:var(--lav);opacity:.5;animation:bonce .8s ease-in-out infinite}
-.typing span:nth-child(2){animation-delay:.15s}
-.typing span:nth-child(3){animation-delay:.3s}
+.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
 @keyframes bonce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-4px);opacity:1}}
-
-.input-area{padding:.85rem 1rem;background:rgba(13,10,26,.92);border-top:1px solid var(--bdr);display:flex;gap:.55rem;align-items:flex-end}
-.msg-input{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--bdr);border-radius:12px;color:#f0eaff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.88rem;padding:.65rem .9rem;outline:none;resize:none;max-height:110px;overflow-y:auto;transition:border-color .2s;line-height:1.6}
-.msg-input:focus{border-color:rgba(232,160,196,.5)}
-.msg-input::placeholder{color:rgba(184,172,223,.45)}
-.send-btn{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#c97ab0,#8b73c9);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .2s,transform .15s}
+.input-area{padding:.72rem .88rem;background:rgba(13,8,24,.95);border-top:1px solid var(--bdr);display:flex;gap:.48rem;align-items:flex-end;flex-shrink:0}
+.msg-input{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--bdr);border-radius:12px;color:#f5eeff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.87rem;padding:.58rem .85rem;outline:none;resize:none;max-height:100px;overflow-y:auto;transition:border-color .2s;line-height:1.6}
+.msg-input:focus{border-color:rgba(232,84,122,.42)}
+.msg-input::placeholder{color:rgba(196,168,224,.38)}
+.send-btn{width:40px;height:40px;border-radius:50%;background:var(--grad);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .2s,transform .15s;box-shadow:0 2px 14px rgba(232,84,122,.32)}
 .send-btn:hover:not(:disabled){opacity:.9;transform:scale(1.05)}
-.send-btn:disabled{opacity:.35;cursor:not-allowed}
+.send-btn:disabled{opacity:.28;cursor:not-allowed}
 .send-btn svg{width:15px;height:15px;fill:white}
+.summary-badge{display:inline-flex;align-items:center;gap:.32rem;font-size:.67rem;color:var(--lav);background:rgba(196,168,224,.07);border:1px solid var(--bdr);border-radius:20px;padding:.2rem .62rem;margin:0 auto .38rem;opacity:.68}
+.empty-state{text-align:center;margin:auto;padding:2.5rem 1.5rem;color:var(--lav);opacity:.45}
+.empty-state .eicon{font-size:1.55rem;margin-bottom:.6rem;display:block}
+.empty-state p{font-size:.8rem;line-height:2}
 
-/* ── Memory panel ── */
-.hp-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99}
-.hp-overlay.open{display:block}
-.side-panel{position:fixed;top:0;right:-340px;width:320px;height:100%;background:#160f2e;border-left:1px solid var(--bdr);z-index:100;transition:right .28s ease;display:flex;flex-direction:column}
-.side-panel.open{right:0}
-.hp-head{padding:1rem 1.1rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
-.hp-title{font-size:.88rem;font-weight:700;font-family:'Noto Serif JP',serif;color:var(--pink)}
-.hp-close{background:none;border:none;color:var(--lav);cursor:pointer;font-size:1.1rem;padding:.2rem .4rem;transition:color .2s}
-.hp-close:hover{color:var(--pink)}
-.hp-body{flex:1;overflow-y:auto;padding:.85rem}
-.hp-body::-webkit-scrollbar{width:3px}
-.hp-body::-webkit-scrollbar-thumb{background:rgba(184,172,223,.2);border-radius:4px}
-.hp-section{margin-bottom:1.25rem}
-.hp-section-title{font-size:.65rem;letter-spacing:.18em;color:var(--lav);margin-bottom:.6rem}
-.memory-item{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:.7rem .9rem;margin-bottom:.5rem;font-size:.82rem;line-height:1.7;display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem}
-.memory-item .mi-del{background:none;border:none;color:rgba(240,128,128,.5);cursor:pointer;font-size:.9rem;flex-shrink:0;padding:.1rem;transition:color .2s}
+/* ── Home ── */
+#homeScreen{background:var(--dark)}
+.home-hdr{padding:.88rem 1.15rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:rgba(13,8,24,.85);backdrop-filter:blur(10px)}
+.home-logo{font-family:'Noto Serif JP',serif;font-size:.92rem;letter-spacing:.14em;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.home-scroll-wrap{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.home-scroll{max-width:520px;margin:0 auto;padding:1.3rem 1.1rem 5.5rem;width:100%}
+.home-greeting{font-size:.76rem;color:var(--lav);opacity:.65;margin-bottom:1.45rem;letter-spacing:.04em}
+.home-sec{font-size:.6rem;letter-spacing:.22em;color:var(--rose);text-transform:uppercase;margin-bottom:.72rem;display:flex;align-items:center;gap:.5rem}
+.home-sec::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(232,84,122,.3),transparent)}
+.oshi-card{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:.88rem 1rem;margin-bottom:.58rem;transition:border-color .2s,transform .15s}
+.oshi-card:hover{border-color:rgba(232,84,122,.35);transform:translateY(-1px)}
+.oc-name{font-size:.9rem;font-weight:700;font-family:'Noto Serif JP',serif;margin-bottom:.18rem}
+.oc-meta{font-size:.67rem;color:var(--lav);opacity:.65;line-height:1.55}
+.oc-preview{font-size:.7rem;color:rgba(196,168,224,.45);margin-top:.18rem;font-style:italic}
+.oc-actions{display:flex;gap:.38rem;margin-top:.62rem}
+.oc-btn{flex:1;padding:.28rem;border-radius:6px;border:1px solid var(--bdr);background:transparent;font-size:.7rem;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:opacity .2s;color:var(--lav)}
+.oc-btn.load{border-color:rgba(232,84,122,.38);color:var(--rose)}
+.oc-btn.del{border-color:rgba(255,100,100,.18);color:#f08080}
+.oc-btn:hover{opacity:.72}
+.new-oshi-btn{width:100%;padding:.82rem;border:1px dashed rgba(232,84,122,.28);border-radius:14px;background:none;color:var(--rose);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.83rem;cursor:pointer;transition:all .2s;letter-spacing:.04em;margin-top:.4rem}
+.new-oshi-btn:hover{border-color:var(--rose);background:rgba(232,84,122,.07)}
+.home-logout{background:none;border:none;color:rgba(196,168,224,.4);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.68rem;cursor:pointer;transition:color .2s;padding:.2rem .35rem}
+.home-logout:hover{color:var(--lav)}
+
+/* ── Edit Panel ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:90}
+.overlay.open{display:block}
+.edit-panel{position:fixed;top:0;right:-110%;width:min(360px,100%);height:100%;background:#130a24;border-left:1px solid var(--bdr);z-index:100;transition:right .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
+.edit-panel.open{right:0}
+.ep-head{padding:.88rem 1.1rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.ep-title{font-size:.86rem;font-weight:700;font-family:'Noto Serif JP',serif;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ep-close{background:none;border:none;color:var(--lav);cursor:pointer;font-size:1.05rem;padding:.2rem .38rem;transition:color .2s}
+.ep-close:hover{color:var(--rose)}
+.ep-tabs{display:flex;border-bottom:1px solid var(--bdr);flex-shrink:0}
+.ep-tab{flex:1;padding:.58rem;font-size:.71rem;background:none;border:none;color:var(--lav);cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:color .2s;border-bottom:2px solid transparent;margin-bottom:-1px;letter-spacing:.04em}
+.ep-tab.active{color:var(--rose);border-bottom-color:var(--rose)}
+.ep-body{flex:1;overflow-y:auto;padding:.82rem;-webkit-overflow-scrolling:touch}
+.ep-body::-webkit-scrollbar{width:2px}
+.ep-body::-webkit-scrollbar-thumb{background:rgba(196,168,224,.14);border-radius:4px}
+.ep-view{display:none}.ep-view.active{display:block}
+.ep-lbl{font-size:.58rem;letter-spacing:.22em;color:var(--rose);text-transform:uppercase;margin:1.05rem 0 .45rem;display:flex;align-items:center;gap:.45rem}
+.ep-lbl::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(232,84,122,.28),transparent)}
+.ep-sub{font-size:.63rem;color:var(--lav);opacity:.65;margin-bottom:.28rem}
+.ep-section-title{font-size:.62rem;color:var(--lav);opacity:.7;margin-bottom:.42rem}
+.memory-item{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:.62rem .85rem;margin-bottom:.42rem;font-size:.79rem;line-height:1.7;display:flex;align-items:flex-start;justify-content:space-between;gap:.48rem}
+.memory-item .mi-del{background:none;border:none;color:rgba(240,128,128,.45);cursor:pointer;font-size:.82rem;flex-shrink:0;transition:color .2s}
 .memory-item .mi-del:hover{color:#f08080}
-.empty-mem{font-size:.8rem;color:var(--lav);opacity:.5;text-align:center;padding:1rem}
-.hp-footer{padding:.75rem;border-top:1px solid var(--bdr)}
-.save-btn{width:100%;padding:.7rem;border:none;border-radius:10px;background:linear-gradient(135deg,#c97ab0,#8b73c9);color:#fff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;transition:opacity .2s;letter-spacing:.05em}
-.save-btn:hover{opacity:.9}
+.empty-mem{font-size:.76rem;color:var(--lav);opacity:.42;text-align:center;padding:.88rem}
+.ep-footer{padding:.72rem;border-top:1px solid var(--bdr);flex-shrink:0}
+.ep-apply-btn{width:100%;padding:.68rem;border:none;border-radius:10px;background:var(--grad);color:#fff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;transition:opacity .2s;letter-spacing:.04em}
+.ep-apply-btn:hover{opacity:.88}
 
-/* ── Save history panel ── */
-.save-item{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:.8rem;margin-bottom:.6rem;transition:border-color .2s}
-.save-item:hover{border-color:rgba(232,160,196,.35)}
-.si-name{font-size:.88rem;font-weight:700}
-.si-meta{font-size:.7rem;color:var(--lav);margin-top:.25rem;line-height:1.55}
-.si-preview{font-size:.68rem;color:rgba(176,168,215,.55);margin-top:.2rem;font-style:italic}
-.si-actions{display:flex;gap:.4rem;margin-top:.65rem}
-.si-btn{flex:1;padding:.3rem;border-radius:6px;border:1px solid var(--bdr);background:transparent;font-size:.72rem;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:opacity .2s}
-.si-btn.load{border-color:rgba(232,160,196,.4);color:var(--pink)}
-.si-btn.del{border-color:rgba(255,100,100,.2);color:#f08080}
-.si-btn:hover{opacity:.75}
-.empty-hist{text-align:center;padding:2rem 1rem;color:var(--lav);opacity:.5;font-size:.82rem;line-height:1.9}
-
-/* panel tabs */
-.panel-tabs{display:flex;border-bottom:1px solid var(--bdr)}
-.ptab{flex:1;padding:.65rem;font-size:.75rem;background:none;border:none;color:var(--lav);cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:color .2s;border-bottom:2px solid transparent;margin-bottom:-1px}
-.ptab.active{color:var(--pink);border-bottom-color:var(--pink)}
-.panel-view{display:none}
-.panel-view.active{display:block}
+/* ── Save Modal ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:200;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+@media(min-width:480px){.modal-overlay.open{align-items:center}}
+.save-modal{background:#1a0f30;border:1px solid rgba(232,160,196,.22);border-radius:20px 20px 0 0;padding:2rem 1.5rem 2.5rem;width:100%;max-width:440px;text-align:center;animation:slideUp .28s ease}
+@media(min-width:480px){.save-modal{border-radius:20px}}
+@keyframes slideUp{from{transform:translateY(28px);opacity:0}to{transform:translateY(0);opacity:1}}
+.sm-icon{font-size:1.8rem;margin-bottom:.72rem}
+.sm-title{font-family:'Noto Serif JP',serif;font-size:1.02rem;font-weight:400;line-height:1.75;letter-spacing:.06em;margin-bottom:.48rem}
+.sm-sub{font-size:.77rem;color:var(--lav);opacity:.72;line-height:1.9;margin-bottom:1.7rem}
+.google-btn{width:100%;padding:.82rem;border:1px solid var(--bdr);border-radius:12px;background:rgba(255,255,255,.05);color:#f5eeff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.88rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.62rem;transition:all .2s;margin-bottom:.72rem}
+.google-btn:hover{border-color:var(--rose);background:rgba(232,84,122,.08)}
+.sm-save-btn{width:100%;padding:.82rem;border:none;border-radius:12px;background:var(--grad);color:#fff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;transition:opacity .2s;margin-bottom:.72rem;letter-spacing:.04em}
+.sm-save-btn:hover{opacity:.88}
+.sm-cancel{background:none;border:none;color:rgba(196,168,224,.42);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.76rem;cursor:pointer;transition:color .2s;letter-spacing:.04em}
+.sm-cancel:hover{color:var(--lav)}
 
 /* ── Toast ── */
-.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(16px);background:#1e1540;border:1px solid var(--pink);border-radius:10px;padding:.55rem 1.25rem;font-size:.8rem;color:var(--pink);opacity:0;transition:all .28s;pointer-events:none;z-index:200;white-space:nowrap}
+.toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%) translateY(12px);background:#1e1035;border:1px solid var(--rose);border-radius:10px;padding:.48rem 1.2rem;font-size:.77rem;color:var(--rose);opacity:0;transition:all .28s;pointer-events:none;z-index:400;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.empty-state{text-align:center;margin:auto;padding:2.5rem 1.5rem;color:var(--lav);opacity:.5}
-.empty-state .eicon{font-size:1.8rem;margin-bottom:.75rem;display:block}
-.empty-state p{font-size:.83rem;line-height:1.9}
-
-/* summary badge */
-.summary-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.7rem;color:var(--lav);background:rgba(184,172,223,.08);border:1px solid var(--bdr);border-radius:20px;padding:.25rem .7rem;margin:0 auto .5rem;opacity:.7}
-
-/* ── Login ── */
-.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem 1rem;position:relative;z-index:1}
-.login-card{text-align:center;max-width:380px;width:100%}
-.google-btn{width:100%;padding:.85rem 1rem;border:1px solid var(--bdr);border-radius:12px;background:rgba(255,255,255,.05);color:#f0eaff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.65rem;transition:all .2s;margin-top:.5rem}
-.google-btn:hover{border-color:var(--pink);background:rgba(232,160,196,.08)}
-.google-btn svg{flex-shrink:0}
-/* ── User bar ── */
-.user-bar{display:flex;align-items:center;justify-content:flex-end;gap:.65rem;padding:.5rem 0;margin-bottom:.25rem;font-size:.72rem;color:var(--lav);opacity:.75}
-.user-bar button{background:none;border:1px solid var(--bdr);border-radius:6px;color:var(--lav);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.68rem;padding:.2rem .55rem;cursor:pointer;transition:all .2s}
-.user-bar button:hover{border-color:var(--pink);color:var(--pink)}
 </style>
 </head>
 <body>
 
 <div class="stars" id="stars"></div>
-<div class="hp-overlay" id="hpOverlay" onclick="closePanel()"></div>
+<div class="overlay" id="overlay" onclick="closeEditPanel()"></div>
 <div class="toast" id="toast"></div>
 
-<!-- ── Side Panel ── -->
-<div class="side-panel" id="sidePanel">
-  <div class="hp-head">
-    <div class="hp-title">✦ 推しとの記録</div>
-    <button class="hp-close" onclick="closePanel()">✕</button>
+<!-- ── LP Screen ── -->
+<div class="screen active" id="lpScreen">
+  <nav class="lp-nav">
+    <button class="login-link" onclick="handleLoginLink()">ログイン</button>
+  </nav>
+  <div class="demo-bg" id="demoBg"></div>
+  <div class="lp-center">
+    <div class="lp-badge">AI キャラクター</div>
+    <h1 class="lp-title">推しと話せる、<br><span class="grad">あなただけの場所。</span></h1>
+    <p class="lp-sub">名前を入れるだけで、今すぐ話せる<br>あなたの推しが、ここにいる</p>
+    <button class="lp-btn" onclick="goSetup()">✦ 今すぐ推しと話す</button>
   </div>
-  <div class="panel-tabs">
-    <button class="ptab active" onclick="switchTab('memory')">🧠 記憶</button>
-    <button class="ptab" onclick="switchTab('saves')">💾 保存済み</button>
-  </div>
-  <div class="hp-body">
-
-    <div class="panel-view active" id="tabMemory">
-      <div class="hp-section">
-        <div class="hp-section-title">📌 ピン留めされた思い出</div>
-        <div id="pinnedList"><div class="empty-mem">まだピン留めがありません<br>会話中の発言を📌で登録できます</div></div>
-      </div>
-      <div class="hp-section">
-        <div class="hp-section-title">📝 会話サマリー（自動生成）</div>
-        <div id="summaryList"><div class="empty-mem">まだサマリーがありません<br>20往復ごとに自動で生成されます</div></div>
-      </div>
-    </div>
-
-    <div class="panel-view" id="tabSaves">
-      <div id="hpList"><div class="empty-hist">まだ保存された会話はありません ✦</div></div>
-    </div>
-
-  </div>
-  <div class="hp-footer">
-    <button class="save-btn" onclick="saveConversation()">✦ 今の会話を保存する</button>
-  </div>
-</div>
-
-<!-- ── Login Screen ── -->
-<div class="screen active" id="loginScreen">
-  <div class="login-wrap">
-    <div class="login-card">
-      <div class="logo" style="margin-bottom:2rem">
-        <div class="logo-title">推しとのトキメキ</div>
-        <div class="logo-sub">✦ &nbsp;あなただけの推しを、今すぐ生み出して&nbsp; ✦</div>
-      </div>
-      <div class="card" style="padding:1.75rem 1.5rem">
-        <p style="font-size:.85rem;color:var(--lav);line-height:1.95;margin-bottom:1.5rem;opacity:.9">ログインして、あなただけの推しとの<br>特別な時間をはじめましょう</p>
-        <button class="google-btn" onclick="signInWithGoogle()">
-          <svg width="18" height="18" viewBox="0 0 18 18">
-            <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
-            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
-            <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
-            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/>
-          </svg>
-          Googleでログイン
-        </button>
-      </div>
-    </div>
+  <div class="lp-footer">
+    <span class="lp-foot-link">利用規約</span>
+    <span class="lp-foot-link">プライバシーポリシー</span>
   </div>
 </div>
 
 <!-- ── Setup Screen ── -->
 <div class="screen" id="setupScreen">
+  <div class="setup-hdr">
+    <button class="back-btn" onclick="showScreen('lpScreen')">←</button>
+    <div class="setup-hdr-title">推しを設定する</div>
+    <div style="width:28px"></div>
+  </div>
   <div class="setup-scroll">
     <div class="setup-inner">
 
-      <div class="user-bar"><span class="user-email"></span><button onclick="signOut()">ログアウト</button></div>
-      <div class="logo">
-        <div class="logo-title">推しとのトキメキ</div>
-        <div class="logo-sub">✦ &nbsp;あなただけの推しを、今すぐ生み出して&nbsp; ✦</div>
-      </div>
-
-      <!-- 基本設定 -->
-      <div class="section-title">基本設定</div>
-
-      <div class="card">
-        <div class="clabel">キャラクター名 / あなたの名前</div>
-        <div style="display:flex;flex-direction:column;gap:.55rem">
+      <div class="qs-label">推しの名前</div>
+      <div class="qcard">
+        <div class="name-row">
           <input type="text" id="charName" placeholder="推しの名前（例：鳳凰院呂禅）" autocomplete="off">
           <input type="text" id="userName" placeholder="あなたの名前（例：ユウ）" autocomplete="off">
         </div>
       </div>
 
-      <div class="card">
-        <div class="clabel">一人称</div>
-        <div class="tag-row" id="pronounTags"></div>
-      </div>
-      <div class="card">
-        <div class="clabel">口調・話し方</div>
-        <div class="tag-row" id="speechTags"></div>
-      </div>
-      <div class="card">
-        <div class="clabel">性格</div>
-        <div class="tag-row" id="personalityTags"></div>
-      </div>
-      <div class="card">
-        <div class="clabel">あなたとの関係</div>
-        <div class="tag-row" id="relationTags"></div>
-      </div>
+      <div class="qs-label">一人称</div>
+      <div class="qcard"><div class="tag-row" id="pronounTags"></div></div>
 
-      <!-- 深い設定 -->
-      <div class="section-title">深い設定（解釈一致）</div>
+      <div class="qs-label">口調</div>
+      <div class="qcard"><div class="tag-row" id="speechTags"></div></div>
 
-      <div class="card">
-        <div class="clabel">🚫 地雷ワード・絶対言わない言葉</div>
-        <textarea class="ta-sm" id="dangerWords" placeholder="例：死ね、きもい、どうでもいい&#10;カンマ区切りまたは改行で複数入力できます"></textarea>
-      </div>
+      <div class="qs-label">あなたとの関係</div>
+      <div class="qcard"><div class="tag-row" id="relationTags"></div></div>
 
-      <div class="card">
-        <div class="clabel">💬 口癖・語尾・よく使う表現</div>
-        <textarea class="ta-sm" id="mannerisms" placeholder="例：「…そうか」「ふん」「お前には関係ない」「（沈黙）」&#10;特徴的な言い回しを書いてください"></textarea>
-      </div>
+      <button class="detail-toggle" id="detailToggle" onclick="toggleDetail()">
+        <span>⚙ 詳しく設定する</span><span class="arr">▼</span>
+      </button>
 
-      <div class="card">
-        <div class="clabel">😤 感情別の反応パターン</div>
-        <div class="emotion-grid">
-          <div class="emotion-item">
-            <label>嬉しい・照れたとき</label>
-            <input type="text" id="emoHappy" placeholder="例：そっぽを向いて黙る">
+      <div class="detail-section" id="detailSection">
+        <div class="qs-label">性格</div>
+        <div class="qcard"><div class="tag-row" id="personalityTags"></div></div>
+
+        <div class="qs-label">詳細</div>
+        <div class="qcard">
+          <div style="display:flex;flex-direction:column;gap:.72rem">
+            <div>
+              <div class="ep-sub">🚫 地雷ワード</div>
+              <textarea class="ta-sm" id="dangerWords" placeholder="例：死ね、きもい（カンマ区切り）"></textarea>
+            </div>
+            <div>
+              <div class="ep-sub">💬 口癖・語尾</div>
+              <textarea class="ta-sm" id="mannerisms" placeholder="例：「…そうか」「ふん」「お前には関係ない」"></textarea>
+            </div>
+            <div>
+              <div class="ep-sub">❤️ あなたへの呼び方</div>
+              <input type="text" id="callName" placeholder="例：お前、きみ、ユウ、バカ">
+            </div>
           </div>
-          <div class="emotion-item">
-            <label>怒ったとき</label>
-            <input type="text" id="emoAngry" placeholder="例：低い声でゆっくり話す">
+        </div>
+
+        <div class="qcard">
+          <div class="ep-sub" style="margin-bottom:.5rem">😤 感情別の反応</div>
+          <div class="emotion-grid">
+            <div class="emotion-item"><label>嬉しい・照れたとき</label><input type="text" id="emoHappy" placeholder="例：そっぽを向く"></div>
+            <div class="emotion-item"><label>怒ったとき</label><input type="text" id="emoAngry" placeholder="例：低い声になる"></div>
+            <div class="emotion-item"><label>心配・不安なとき</label><input type="text" id="emoWorried" placeholder="例：言葉が少なくなる"></div>
+            <div class="emotion-item"><label>甘えてほしいとき</label><input type="text" id="emoSweet" placeholder="例：名前を多く呼ぶ"></div>
           </div>
-          <div class="emotion-item">
-            <label>心配・不安なとき</label>
-            <input type="text" id="emoWorried" placeholder="例：言葉が少なくなる">
-          </div>
-          <div class="emotion-item">
-            <label>甘えてほしいとき</label>
-            <input type="text" id="emoSweet" placeholder="例：名前を呼ぶ回数が増える">
+        </div>
+
+        <div class="qcard">
+          <div style="display:flex;flex-direction:column;gap:.72rem">
+            <div>
+              <div class="ep-sub">🌍 世界観・状況設定</div>
+              <textarea class="ta-md" id="worldSetting" placeholder="例：現代パラレルの高校。同じクラスで隣の席。"></textarea>
+            </div>
+            <div>
+              <div class="ep-sub">📖 二人の過去・共有記憶</div>
+              <textarea class="ta-md" id="sharedMemory" placeholder="例：小5の夏祭りで迷子の私を見つけてくれた。"></textarea>
+            </div>
+            <div>
+              <div class="ep-sub">📌 最初から覚えていてほしいこと</div>
+              <div class="pin-list" id="setupPinList"></div>
+              <button class="add-pin-btn" onclick="addSetupPin()">＋ 記憶を追加</button>
+            </div>
+            <div>
+              <div class="ep-sub">その他・自由記述</div>
+              <textarea class="ta-md" id="freeText" placeholder="その他、伝えたいことを自由に書いてください"></textarea>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="clabel">❤️ あなたへの呼び方</div>
-        <input type="text" id="callName" placeholder="例：お前、きみ、ユウ、バカ、おい">
-      </div>
-
-      <div class="card">
-        <div class="clabel">🌍 世界観・二人の状況設定</div>
-        <textarea class="ta-md" id="worldSetting" placeholder="例：現代パラレルの高校。同じクラスで隣の席。二人だけが知っている秘密の場所がある屋上。"></textarea>
-      </div>
-
-      <div class="card">
-        <div class="clabel">📖 二人の過去・共有している記憶</div>
-        <textarea class="ta-md" id="sharedMemory" placeholder="例：小5の夏祭りで迷子になった私を見つけてくれた。あのとき泣きそうだったのをずっと覚えている。"></textarea>
-      </div>
-
-      <div class="card">
-        <div class="clabel">📌 最初から覚えていてほしいこと（ピン留め記憶）</div>
-        <div class="pin-list" id="setupPinList"></div>
-        <button class="add-pin-btn" onclick="addSetupPin()">＋ 記憶を追加</button>
-      </div>
-
-      <div class="card">
-        <div class="clabel">その他・自由記述</div>
-        <textarea class="ta-md" id="freeText" placeholder="その他、伝えたいことを自由に書いてください"></textarea>
-      </div>
-
-      <button class="start-btn" onclick="startChat()">✦ &nbsp;推しと話す&nbsp; ✦</button>
+      <button class="start-btn" onclick="startChat()">✦ 話しかける</button>
     </div>
   </div>
 </div>
@@ -349,9 +330,9 @@ textarea{resize:none;line-height:1.75}
       <div class="cpersona" id="chatPersona">-</div>
     </div>
     <div class="hdr-btns">
-      <button class="hbtn" onclick="openPanel()">📖 記録</button>
-      <button class="hbtn" onclick="signOut()">ログアウト</button>
-      <button class="hbtn" onclick="goBack()">← 設定</button>
+      <button class="hbtn" onclick="openEditPanel('memory')" title="記録">📌</button>
+      <button class="hbtn" onclick="openEditPanel('settings')">設定を編集</button>
+      <button class="hbtn save" onclick="openSaveModal()">保存する</button>
     </div>
   </div>
   <div class="messages" id="messages">
@@ -365,463 +346,587 @@ textarea{resize:none;line-height:1.75}
   </div>
 </div>
 
+<!-- ── Home Screen ── -->
+<div class="screen" id="homeScreen">
+  <div class="home-hdr">
+    <div class="home-logo">✦ 推しとのトキメキ</div>
+    <button class="home-logout" onclick="doSignOut()">ログアウト</button>
+  </div>
+  <div class="home-scroll-wrap">
+    <div class="home-scroll">
+      <div class="home-greeting" id="homeGreeting">おかえりなさい</div>
+      <div class="home-sec">あなたの推したち</div>
+      <div id="oshiList"><div class="empty-mem">まだ保存された推しはいません ✦</div></div>
+      <button class="new-oshi-btn" onclick="goSetup()">＋ 新しい推しを作る</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Edit Panel ── -->
+<div class="edit-panel" id="editPanel">
+  <div class="ep-head">
+    <div class="ep-title">✦ 推しの設定</div>
+    <button class="ep-close" onclick="closeEditPanel()">✕</button>
+  </div>
+  <div class="ep-tabs">
+    <button class="ep-tab active" onclick="switchEpTab('settings')">⚙ 設定</button>
+    <button class="ep-tab" onclick="switchEpTab('memory')">📌 記録</button>
+  </div>
+  <div class="ep-body">
+
+    <div class="ep-view active" id="epSettings">
+      <div class="ep-lbl">基本</div>
+      <div style="display:flex;flex-direction:column;gap:.42rem;margin-bottom:.7rem">
+        <input type="text" id="epCharName" placeholder="推しの名前">
+        <input type="text" id="epUserName" placeholder="あなたの名前">
+      </div>
+      <div class="ep-lbl">一人称</div>
+      <div class="tag-row" id="epPronounTags" style="margin-bottom:.2rem"></div>
+      <div class="ep-lbl">口調</div>
+      <div class="tag-row" id="epSpeechTags" style="margin-bottom:.2rem"></div>
+      <div class="ep-lbl">性格</div>
+      <div class="tag-row" id="epPersonalityTags" style="margin-bottom:.2rem"></div>
+      <div class="ep-lbl">関係</div>
+      <div class="tag-row" id="epRelationTags" style="margin-bottom:.2rem"></div>
+      <div class="ep-lbl">詳細</div>
+      <div style="display:flex;flex-direction:column;gap:.52rem">
+        <div><div class="ep-sub">🚫 地雷ワード</div><textarea class="ta-sm" id="epDangerWords"></textarea></div>
+        <div><div class="ep-sub">💬 口癖・語尾</div><textarea class="ta-sm" id="epMannerisms"></textarea></div>
+        <div><div class="ep-sub">❤️ あなたへの呼び方</div><input type="text" id="epCallName"></div>
+        <div><div class="ep-sub">😤 嬉しい・照れ</div><input type="text" id="epEmoHappy"></div>
+        <div><div class="ep-sub">😤 怒ったとき</div><input type="text" id="epEmoAngry"></div>
+        <div><div class="ep-sub">😤 心配なとき</div><input type="text" id="epEmoWorried"></div>
+        <div><div class="ep-sub">😤 甘えてほしいとき</div><input type="text" id="epEmoSweet"></div>
+        <div><div class="ep-sub">🌍 世界観</div><textarea class="ta-md" id="epWorldSetting"></textarea></div>
+        <div><div class="ep-sub">📖 共有記憶</div><textarea class="ta-md" id="epSharedMemory"></textarea></div>
+        <div><div class="ep-sub">その他</div><textarea class="ta-md" id="epFreeText"></textarea></div>
+      </div>
+    </div>
+
+    <div class="ep-view" id="epMemory">
+      <div style="margin-bottom:1.1rem">
+        <div class="ep-section-title">📌 ピン留めされた思い出</div>
+        <div id="pinnedList"><div class="empty-mem">まだピン留めがありません<br>会話中の発言を📌で登録できます</div></div>
+      </div>
+      <div>
+        <div class="ep-section-title">📝 会話サマリー</div>
+        <div id="summaryList"><div class="empty-mem">まだサマリーがありません<br>20往復ごとに自動生成されます</div></div>
+      </div>
+    </div>
+
+  </div>
+  <div class="ep-footer" id="epFooter">
+    <button class="ep-apply-btn" onclick="applyEditPanel()">✦ 設定を反映する</button>
+  </div>
+</div>
+
+<!-- ── Save Modal ── -->
+<div class="modal-overlay" id="saveModal" onclick="closeSaveModalOutside(event)">
+  <div class="save-modal">
+    <div class="sm-icon">✦</div>
+    <div class="sm-title">今日の推しとの思い出を、<br>残しませんか？</div>
+    <div class="sm-sub" id="smSub">ログインすると、会話を保存して<br>いつでも続きを読み返せます</div>
+    <div id="smActions"></div>
+  </div>
+</div>
+
 <script>
-// ── Supabase config（YOUR_... の部分を実際の値に置き換えてください）──
+// ── Supabase ──
 const SUPABASE_URL = 'https://fpqnllptcuqsigurhsji.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcW5sbHB0Y3Vxc2lndXJoc2ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0NjQ3ODgsImV4cCI6MjA4OTA0MDc4OH0.4P0yfBwUmCtrvknka1h4O8Fsww_ja6rxrcW_hsKHij';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { flowType: 'implicit', detectSessionInUrl: true, persistSession: true }
 });
 
+// ── Constants ──
 const API_ENDPOINT = '/api/chat';
-const SUMMARY_INTERVAL = 20; // 何往復ごとにサマリー生成するか
+const SUMMARY_INTERVAL = 20;
+const PRONOUNS    = ['俺','僕','私','あたし','自分','我','ワタクシ','拙者'];
+const SPEECH      = ['タメ口','丁寧語','古風・堅物','ツンデレ語尾','関西弁','猫語尾（〜にゃ）','王様口調','無口・短文'];
+const PERSONALITY = ['ツンデレ','クール系','元気・明るい','ミステリアス','優しいお兄さん系','甘えさせてくれる','ヤンデレ気味','オラオラ系'];
+const RELATIONS   = ['幼馴染','クラスメート','先輩','後輩','恋人','片思い中の恋人','ライバル','主人と従者（従者側）'];
+const PENDING_KEY = 'oshi_pending_save';
 
-const PRONOUNS   = ['俺','僕','私','あたし','自分','我','ワタクシ','拙者'];
-const SPEECH     = ['タメ口','丁寧語','古風・堅物','ツンデレ語尾','関西弁','猫語尾（〜にゃ）','王様口調','無口・短文'];
-const PERSONALITY= ['ツンデレ','クール系','元気・明るい','ミステリアス','優しいお兄さん系','甘えさせてくれる','ヤンデレ気味','オラオラ系'];
-const RELATIONS  = ['幼馴染','クラスメート','先輩','後輩','恋人','片思い中の恋人','ライバル','主人と従者（従者側）'];
-
+// ── State ──
 let currentUser = null;
 let sel = {pronoun:null,speech:null,personality:null,relation:null};
+let epSel = {pronoun:null,speech:null,personality:null,relation:null};
 let history = [];
 let isLoading = false;
-let pinnedMemories = []; // {text, timestamp}
-let summaries = [];      // {text, turnRange}
+let pinnedMemories = [];
+let summaries = [];
 let setupPins = [];
 let turnCount = 0;
 let lastSummaryAt = 0;
 
-/* ── Stars ── */
+// ── Stars ──
 function makeStars(){
-  const c=document.getElementById('stars');
-  for(let i=0;i<60;i++){
-    const s=document.createElement('div');s.className='star';
-    const sz=Math.random()*2+1;
-    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s;opacity:${Math.random()*.4+.1}`;
+  const c = document.getElementById('stars');
+  for(let i = 0; i < 75; i++){
+    const s = document.createElement('div'); s.className = 'star';
+    const sz = Math.random() * 1.8 + 0.7;
+    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*5}s;animation-delay:${Math.random()*5}s;opacity:${Math.random()*.32+.07}`;
     c.appendChild(s);
   }
 }
 
-/* ── Tags ── */
-function makeTags(cid,items,key){
-  const el=document.getElementById(cid);
-  items.forEach(item=>{
-    const t=document.createElement('button');t.className='tag';t.textContent=item;
-    t.onclick=()=>{el.querySelectorAll('.tag').forEach(x=>x.classList.remove('on'));t.classList.add('on');sel[key]=item;};
+// ── LP Demo bg ──
+const DEMO = [
+  {cls:'oshi',text:'…別に、お前には関係ない',x:4,y:8},
+  {cls:'user',text:'ねえ、なんか元気ないじゃん',x:50,y:13},
+  {cls:'oshi',text:'うるさい。ちゃんと食えよ',x:6,y:34},
+  {cls:'user',text:'あのこと、まだ怒ってる？',x:46,y:42},
+  {cls:'oshi',text:'…バカ',x:14,y:62},
+  {cls:'user',text:'ありがとう、助かった',x:52,y:57},
+  {cls:'oshi',text:'今日も来たのか',x:5,y:80},
+  {cls:'user',text:'好きです',x:56,y:82},
+  {cls:'oshi',text:'っ…いきなり何を言って',x:8,y:92},
+];
+function makeDemoBg(){
+  const bg = document.getElementById('demoBg');
+  DEMO.forEach((m,i) => {
+    const d = document.createElement('div');
+    d.className = `db ${m.cls}`;
+    d.textContent = m.text;
+    d.style.cssText = `left:${m.x}%;top:${m.y}%;--d:${4.5+i*.7}s;--r:${(i%3-1)*2.5}deg;--ty:${i%2?'-7px':'7px'}`;
+    bg.appendChild(d);
+  });
+}
+
+// ── Screen nav ──
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goSetup(){
+  showScreen('setupScreen');
+}
+function goHome(){
+  renderOshiList();
+  showScreen('homeScreen');
+}
+
+// ── Tags ──
+function makeTags(cid, items, key, selObj){
+  const el = document.getElementById(cid);
+  el.innerHTML = '';
+  items.forEach(item => {
+    const t = document.createElement('button'); t.className = 'tag'; t.textContent = item;
+    if(selObj[key] === item) t.classList.add('on');
+    t.onclick = () => {
+      el.querySelectorAll('.tag').forEach(x => x.classList.remove('on'));
+      t.classList.add('on'); selObj[key] = item;
+    };
     el.appendChild(t);
   });
 }
+function initTags(){
+  makeTags('pronounTags', PRONOUNS, 'pronoun', sel);
+  makeTags('speechTags', SPEECH, 'speech', sel);
+  makeTags('personalityTags', PERSONALITY, 'personality', sel);
+  makeTags('relationTags', RELATIONS, 'relation', sel);
+}
+function initEpTags(){
+  makeTags('epPronounTags', PRONOUNS, 'pronoun', epSel);
+  makeTags('epSpeechTags', SPEECH, 'speech', epSel);
+  makeTags('epPersonalityTags', PERSONALITY, 'personality', epSel);
+  makeTags('epRelationTags', RELATIONS, 'relation', epSel);
+}
 
-/* ── Setup pins ── */
+// ── Setup pins ──
 function addSetupPin(val=''){
-  const id = Date.now();
-  setupPins.push({id,val});
-  renderSetupPins();
+  const id = Date.now(); setupPins.push({id,val}); renderSetupPins();
 }
 function removeSetupPin(id){
-  setupPins=setupPins.filter(p=>p.id!==id);
-  renderSetupPins();
+  setupPins = setupPins.filter(p => p.id !== id); renderSetupPins();
 }
 function renderSetupPins(){
-  const el=document.getElementById('setupPinList');
-  el.innerHTML='';
-  setupPins.forEach(p=>{
-    const div=document.createElement('div');div.className='pin-item';
-    div.innerHTML=`<input type="text" placeholder="例：私が雨の日に泣いていたのを見ていた" value="${p.val}" oninput="updateSetupPin(${p.id},this.value)"><button class="pin-del" onclick="removeSetupPin(${p.id})">✕</button>`;
+  const el = document.getElementById('setupPinList'); el.innerHTML = '';
+  setupPins.forEach(p => {
+    const div = document.createElement('div'); div.className = 'pin-item';
+    div.innerHTML = `<input type="text" placeholder="例：私が雨の日に泣いていたのを見ていた" value="${p.val}" oninput="updateSetupPin(${p.id},this.value)"><button class="pin-del" onclick="removeSetupPin(${p.id})">✕</button>`;
     el.appendChild(div);
   });
 }
-function updateSetupPin(id,val){
-  const p=setupPins.find(x=>x.id===id);
-  if(p)p.val=val;
+function updateSetupPin(id, val){ const p = setupPins.find(x => x.id === id); if(p) p.val = val; }
+
+// ── Detail toggle ──
+function toggleDetail(){
+  const sec = document.getElementById('detailSection');
+  const btn = document.getElementById('detailToggle');
+  const open = sec.classList.toggle('open');
+  btn.classList.toggle('open', open);
 }
 
-/* ── System prompt builder ── */
+// ── System prompt ──
 function buildSystem(){
-  const name      = document.getElementById('charName').value||'推しキャラ';
-  const user      = document.getElementById('userName').value||'ユーザー';
-  const pronoun   = sel.pronoun||'俺';
-  const speech    = sel.speech||'タメ口';
-  const persona   = sel.personality||'クール系';
-  const relation  = sel.relation||'幼馴染';
+  const name      = document.getElementById('charName').value || '推しキャラ';
+  const user      = document.getElementById('userName').value || 'ユーザー';
+  const pronoun   = sel.pronoun   || '俺';
+  const speech    = sel.speech    || 'タメ口';
+  const persona   = sel.personality || 'クール系';
+  const relation  = sel.relation  || '幼馴染';
   const danger    = document.getElementById('dangerWords').value.trim();
   const manner    = document.getElementById('mannerisms').value.trim();
   const emoHappy  = document.getElementById('emoHappy').value.trim();
   const emoAngry  = document.getElementById('emoAngry').value.trim();
-  const emoWorried= document.getElementById('emoWorried').value.trim();
+  const emoWorried = document.getElementById('emoWorried').value.trim();
   const emoSweet  = document.getElementById('emoSweet').value.trim();
   const callName  = document.getElementById('callName').value.trim();
   const world     = document.getElementById('worldSetting').value.trim();
   const shared    = document.getElementById('sharedMemory').value.trim();
   const free      = document.getElementById('freeText').value.trim();
+  const pinTexts  = [...setupPins.map(p => p.val).filter(Boolean), ...pinnedMemories.map(m => m.text)];
+  const summaryText = summaries.map(s => `[${s.turnRange}] ${s.text}`).join('\n');
 
-  const pinTexts  = [...setupPins.map(p=>p.val).filter(Boolean), ...pinnedMemories.map(m=>m.text)];
-  const summaryText = summaries.map(s=>`[${s.turnRange}] ${s.text}`).join('\n');
-
-  let prompt = `あなたは「${name}」というキャラクターとして、${user}と会話します。
-
-【基本設定】
-- 名前：${name}
-- 一人称：${pronoun}
-- 口調：${speech}
-- 性格：${persona}
-- ${user}との関係：${relation}
-- ${user}への呼び方：${callName||'自然な呼び方'}`;
-
-  if(manner) prompt+=`\n- 口癖・語尾：${manner}`;
-  if(world)  prompt+=`\n\n【世界観・状況】\n${world}`;
-  if(shared) prompt+=`\n\n【二人の過去・共有記憶】\n${shared}`;
-
+  let prompt = `あなたは「${name}」というキャラクターとして、${user}と会話します。\n\n【基本設定】\n- 名前：${name}\n- 一人称：${pronoun}\n- 口調：${speech}\n- 性格：${persona}\n- ${user}との関係：${relation}\n- ${user}への呼び方：${callName||'自然な呼び方'}`;
+  if(manner)   prompt += `\n- 口癖・語尾：${manner}`;
+  if(world)    prompt += `\n\n【世界観・状況】\n${world}`;
+  if(shared)   prompt += `\n\n【二人の過去・共有記憶】\n${shared}`;
   if(emoHappy||emoAngry||emoWorried||emoSweet){
-    prompt+=`\n\n【感情別の反応パターン】`;
-    if(emoHappy)  prompt+=`\n- 嬉しい・照れたとき：${emoHappy}`;
-    if(emoAngry)  prompt+=`\n- 怒ったとき：${emoAngry}`;
-    if(emoWorried)prompt+=`\n- 心配・不安なとき：${emoWorried}`;
-    if(emoSweet)  prompt+=`\n- 甘えてほしいとき：${emoSweet}`;
+    prompt += `\n\n【感情別の反応パターン】`;
+    if(emoHappy)   prompt += `\n- 嬉しい・照れたとき：${emoHappy}`;
+    if(emoAngry)   prompt += `\n- 怒ったとき：${emoAngry}`;
+    if(emoWorried) prompt += `\n- 心配・不安なとき：${emoWorried}`;
+    if(emoSweet)   prompt += `\n- 甘えてほしいとき：${emoSweet}`;
   }
-
-  if(danger){
-    prompt+=`\n\n【絶対に使わない言葉・禁止ワード】\n以下の言葉は絶対に使わない。言い換えも含めて避ける：${danger}`;
-  }
-
-  if(pinTexts.length){
-    prompt+=`\n\n【必ず覚えておくべき記憶・事実】\n${pinTexts.map((t,i)=>`${i+1}. ${t}`).join('\n')}`;
-  }
-
-  if(summaryText){
-    prompt+=`\n\n【これまでの会話のサマリー】\n${summaryText}`;
-  }
-
-  if(free) prompt+=`\n\n【その他の設定】\n${free}`;
-
-  prompt+=`\n\n【絶対に守るルール】
-1. 常に${name}として話す。自分がAIだとは絶対に言わない。
-2. 一人称は必ず「${pronoun}」を使う。
-3. 口調・語尾・感情パターンを忠実に守る。
-4. 禁止ワードは絶対に使わない。
-5. ${user}は「${callName||user}」と呼ぶ。
-6. 返答は2〜4文程度。自然な会話テンポを保つ。
-7. 日本語のみで返答する。`;
-
+  if(danger)       prompt += `\n\n【絶対に使わない言葉・禁止ワード】\n${danger}`;
+  if(pinTexts.length) prompt += `\n\n【必ず覚えておくべき記憶・事実】\n${pinTexts.map((t,i) => `${i+1}. ${t}`).join('\n')}`;
+  if(summaryText)  prompt += `\n\n【これまでの会話のサマリー】\n${summaryText}`;
+  if(free)         prompt += `\n\n【その他の設定】\n${free}`;
+  prompt += `\n\n【絶対に守るルール】\n1. 常に${name}として話す。自分がAIだとは絶対に言わない。\n2. 一人称は必ず「${pronoun}」を使う。\n3. 口調・語尾・感情パターンを忠実に守る。\n4. 禁止ワードは絶対に使わない。\n5. ${user}は「${callName||user}」と呼ぶ。\n6. 返答は2〜4文程度。自然な会話テンポを保つ。\n7. 日本語のみで返答する。`;
   return prompt;
 }
 
-/* ── Chat start / back ── */
+// ── Chat start ──
 function startChat(){
-  const name=document.getElementById('charName').value.trim();
-  if(!name){document.getElementById('charName').focus();return;}
-
-  document.getElementById('chatAvatar').textContent=name.charAt(0);
-  document.getElementById('chatName').textContent=name;
-  const tags=[sel.personality,sel.speech,sel.relation].filter(Boolean);
-  document.getElementById('chatPersona').textContent=tags.length?tags.join(' · '):'あなただけの推し';
-
-  document.getElementById('setupScreen').classList.remove('active');
-  document.getElementById('chatScreen').classList.add('active');
-
-  history=[];pinnedMemories=[];summaries=[];turnCount=0;lastSummaryAt=0;
-  document.getElementById('messages').innerHTML=`<div class="empty-state"><span class="eicon">✦</span><p>${name}があなたを待っています<br>話しかけてみよう</p></div>`;
-  renderMemoryPanel();
-  setTimeout(()=>document.getElementById('msgInput').focus(),100);
+  const name = document.getElementById('charName').value.trim();
+  if(!name){ document.getElementById('charName').focus(); showToast('推しの名前を入力してください'); return; }
+  document.getElementById('chatAvatar').textContent = name.charAt(0);
+  document.getElementById('chatName').textContent = name;
+  const tags = [sel.personality, sel.speech, sel.relation].filter(Boolean);
+  document.getElementById('chatPersona').textContent = tags.length ? tags.join(' · ') : 'あなただけの推し';
+  history = []; pinnedMemories = []; summaries = []; turnCount = 0; lastSummaryAt = 0;
+  document.getElementById('messages').innerHTML = `<div class="empty-state"><span class="eicon">✦</span><p>${name}があなたを待っています<br>話しかけてみよう</p></div>`;
+  showScreen('chatScreen');
+  setTimeout(() => document.getElementById('msgInput').focus(), 200);
 }
 
-function goBack(){
-  document.getElementById('chatScreen').classList.remove('active');
-  document.getElementById('setupScreen').classList.add('active');
+// ── Input ──
+function autoResize(el){ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 100) + 'px'; }
+function handleKey(e){ if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); } }
+
+// ── Messages ──
+function appendMsg(role, content, isPinned=false){
+  const msgs = document.getElementById('messages');
+  const empty = msgs.querySelector('.empty-state'); if(empty) empty.remove();
+  const isUser = role === 'user';
+  const charName = document.getElementById('chatName').textContent;
+  const userName = document.getElementById('userName').value || 'You';
+  const escaped = content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const safeAttr = content.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+  const div = document.createElement('div'); div.className = `msg ${isUser?'user':'oshi'}`;
+  div.innerHTML = `<div class="mav ${isUser?'ua':'oa'}">${isUser?userName.charAt(0):charName.charAt(0)}</div><div class="bubble">${escaped}${!isUser?`<button class="pin-msg-btn ${isPinned?'pinned':''}" onclick="pinMessage('${safeAttr}',this)" title="記憶にピン留め">📌</button>`:''}</div>`;
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
 }
-
-/* ── Input ── */
-function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,110)+'px';}
-function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
-
-/* ── Messages ── */
-function appendMsg(role,content,isPinned=false){
-  const msgs=document.getElementById('messages');
-  const empty=msgs.querySelector('.empty-state');
-  if(empty)empty.remove();
-  const isUser=role==='user';
-  const charName=document.getElementById('chatName').textContent;
-  const userName=document.getElementById('userName').value||'You';
-  const msgId='msg_'+Date.now()+'_'+Math.random().toString(36).slice(2);
-  const escaped=content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const safeAttr=content.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
-  const div=document.createElement('div');
-  div.className=`msg ${isUser?'user':'oshi'}`;
-  div.id=msgId;
-  div.innerHTML=`
-    <div class="mav ${isUser?'ua':'oa'}">${isUser?userName.charAt(0):charName.charAt(0)}</div>
-    <div class="bubble">${escaped}${!isUser?`<button class="pin-msg-btn ${isPinned?'pinned':''}" onclick="pinMessage('${safeAttr}',this)" title="記憶にピン留め">📌</button>`:''}</div>`;
-  msgs.appendChild(div);
-  msgs.scrollTop=msgs.scrollHeight;
-}
-
 function showTyping(){
-  const msgs=document.getElementById('messages');
-  const n=document.getElementById('chatName').textContent;
-  const div=document.createElement('div');div.className='msg oshi';div.id='typingInd';
-  div.innerHTML=`<div class="mav oa">${n.charAt(0)}</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
-  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+  const msgs = document.getElementById('messages');
+  const n = document.getElementById('chatName').textContent;
+  const div = document.createElement('div'); div.className = 'msg oshi'; div.id = 'typingInd';
+  div.innerHTML = `<div class="mav oa">${n.charAt(0)}</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
 }
-function removeTyping(){const t=document.getElementById('typingInd');if(t)t.remove();}
+function removeTyping(){ const t = document.getElementById('typingInd'); if(t) t.remove(); }
 
-/* ── Pin message ── */
-function pinMessage(text,btn){
-  const already=pinnedMemories.find(m=>m.text===text);
-  if(already){
-    pinnedMemories=pinnedMemories.filter(m=>m.text!==text);
-    btn.classList.remove('pinned');
-    showToast('ピン留めを解除しました');
-  } else {
-    pinnedMemories.push({text,timestamp:new Date().toLocaleString('ja-JP')});
-    btn.classList.add('pinned');
-    showToast('📌 記憶にピン留めしました');
-  }
+// ── Pin ──
+function pinMessage(text, btn){
+  const already = pinnedMemories.find(m => m.text === text);
+  if(already){ pinnedMemories = pinnedMemories.filter(m => m.text !== text); btn.classList.remove('pinned'); showToast('ピン留めを解除しました'); }
+  else { pinnedMemories.push({text, timestamp:new Date().toLocaleString('ja-JP')}); btn.classList.add('pinned'); showToast('📌 記憶にピン留めしました'); }
   renderMemoryPanel();
 }
 
-/* ── Auto summary ── */
+// ── Summary ──
 async function maybeGenerateSummary(){
-  if(turnCount-lastSummaryAt < SUMMARY_INTERVAL) return;
-  const slice=history.slice(lastSummaryAt*2, turnCount*2);
-  if(slice.length<4) return;
-  lastSummaryAt=turnCount;
-
+  if(turnCount - lastSummaryAt < SUMMARY_INTERVAL) return;
+  const slice = history.slice(lastSummaryAt*2, turnCount*2);
+  if(slice.length < 4) return;
+  lastSummaryAt = turnCount;
   try{
-    const res=await fetch(API_ENDPOINT,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        system:'会話ログを3〜5文で簡潔に要約してください。キャラクターの感情変化や重要な出来事に注目してください。日本語で返答してください。',
-        messages:[{role:'user',content:'以下の会話を要約してください：\n\n'+slice.map(m=>`${m.role==='user'?'ユーザー':'推し'}：${m.content}`).join('\n')}]
-      })
-    });
-    const data=await res.json();
-    const text=data.content?.find(b=>b.type==='text')?.text;
+    const res = await fetch(API_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:'会話ログを3〜5文で簡潔に要約してください。キャラクターの感情変化や重要な出来事に注目してください。日本語で返答してください。',messages:[{role:'user',content:'以下の会話を要約してください：\n\n'+slice.map(m=>`${m.role==='user'?'ユーザー':'推し'}：${m.content}`).join('\n')}]})});
+    const data = await res.json();
+    const text = data.content?.find(b => b.type === 'text')?.text;
     if(text){
-      const range=`${lastSummaryAt-SUMMARY_INTERVAL+1}〜${lastSummaryAt}往復目`;
-      summaries.push({text,turnRange:range});
-      renderMemoryPanel();
-      // show badge in chat
-      const msgs=document.getElementById('messages');
-      const badge=document.createElement('div');
-      badge.style.cssText='display:flex;justify-content:center;margin:.5rem 0';
-      badge.innerHTML=`<span class="summary-badge">📝 会話サマリーを自動保存しました</span>`;
-      msgs.appendChild(badge);
-      msgs.scrollTop=msgs.scrollHeight;
+      const range = `${lastSummaryAt-SUMMARY_INTERVAL+1}〜${lastSummaryAt}往復目`;
+      summaries.push({text, turnRange:range}); renderMemoryPanel();
+      const msgs = document.getElementById('messages');
+      const badge = document.createElement('div'); badge.style.cssText = 'display:flex;justify-content:center;margin:.45rem 0';
+      badge.innerHTML = `<span class="summary-badge">📝 会話サマリーを自動保存しました</span>`;
+      msgs.appendChild(badge); msgs.scrollTop = msgs.scrollHeight;
     }
-  }catch(e){/* サマリー失敗は無視 */}
+  }catch(e){}
 }
 
-/* ── Send ── */
+// ── Send ──
 async function sendMessage(){
-  if(isLoading)return;
-  const input=document.getElementById('msgInput');
-  const text=input.value.trim();
-  if(!text)return;
-  input.value='';input.style.height='auto';
-  appendMsg('user',text);
-  history.push({role:'user',content:text});
-  isLoading=true;document.getElementById('sendBtn').disabled=true;
+  if(isLoading) return;
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim(); if(!text) return;
+  input.value = ''; input.style.height = 'auto';
+  appendMsg('user', text);
+  history.push({role:'user', content:text});
+  isLoading = true; document.getElementById('sendBtn').disabled = true;
   showTyping();
   try{
-    const res=await fetch(API_ENDPOINT,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({system:buildSystem(),messages:history.slice(-30)}),
-    });
-    const data=await res.json();
+    const res = await fetch(API_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:buildSystem(),messages:history.slice(-30)})});
+    const data = await res.json();
     removeTyping();
-    const reply=data.content?.find(b=>b.type==='text')?.text||'…';
-    appendMsg('assistant',reply);
-    history.push({role:'assistant',content:reply});
-    turnCount++;
-    maybeGenerateSummary();
-  }catch(err){
-    removeTyping();
-    appendMsg('assistant','（少し調子が悪いみたい…もう一度話しかけてみて）');
-  }
-  isLoading=false;document.getElementById('sendBtn').disabled=false;
+    const reply = data.content?.find(b => b.type === 'text')?.text || '…';
+    appendMsg('assistant', reply);
+    history.push({role:'assistant', content:reply});
+    turnCount++; maybeGenerateSummary();
+  }catch(err){ removeTyping(); appendMsg('assistant','（少し調子が悪いみたい…もう一度話しかけてみて）'); }
+  isLoading = false; document.getElementById('sendBtn').disabled = false;
   input.focus();
 }
 
-/* ── Panel ── */
-function openPanel(){renderMemoryPanel();renderSavesList();document.getElementById('sidePanel').classList.add('open');document.getElementById('hpOverlay').classList.add('open');}
-function closePanel(){document.getElementById('sidePanel').classList.remove('open');document.getElementById('hpOverlay').classList.remove('open');}
-function switchTab(tab){
-  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.panel-view').forEach(v=>v.classList.remove('active'));
-  document.querySelector(`.ptab[onclick="switchTab('${tab}')"]`).classList.add('active');
-  document.getElementById(tab==='memory'?'tabMemory':'tabSaves').classList.add('active');
+// ── Edit Panel ──
+function openEditPanel(tab='settings'){
+  epSel = {...sel};
+  document.getElementById('epCharName').value    = document.getElementById('charName').value;
+  document.getElementById('epUserName').value    = document.getElementById('userName').value;
+  document.getElementById('epDangerWords').value = document.getElementById('dangerWords').value;
+  document.getElementById('epMannerisms').value  = document.getElementById('mannerisms').value;
+  document.getElementById('epCallName').value    = document.getElementById('callName').value;
+  document.getElementById('epEmoHappy').value    = document.getElementById('emoHappy').value;
+  document.getElementById('epEmoAngry').value    = document.getElementById('emoAngry').value;
+  document.getElementById('epEmoWorried').value  = document.getElementById('emoWorried').value;
+  document.getElementById('epEmoSweet').value    = document.getElementById('emoSweet').value;
+  document.getElementById('epWorldSetting').value = document.getElementById('worldSetting').value;
+  document.getElementById('epSharedMemory').value = document.getElementById('sharedMemory').value;
+  document.getElementById('epFreeText').value    = document.getElementById('freeText').value;
+  initEpTags();
+  switchEpTab(tab);
+  document.getElementById('editPanel').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
 }
-
+function closeEditPanel(){
+  document.getElementById('editPanel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+function switchEpTab(tab){
+  document.querySelectorAll('.ep-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.ep-view').forEach(v => v.classList.remove('active'));
+  document.querySelector(`.ep-tab[onclick="switchEpTab('${tab}')"]`).classList.add('active');
+  document.getElementById(tab === 'settings' ? 'epSettings' : 'epMemory').classList.add('active');
+  document.getElementById('epFooter').style.display = tab === 'settings' ? 'block' : 'none';
+  if(tab === 'memory') renderMemoryPanel();
+}
+function applyEditPanel(){
+  sel = {...epSel};
+  document.getElementById('charName').value    = document.getElementById('epCharName').value;
+  document.getElementById('userName').value    = document.getElementById('epUserName').value;
+  document.getElementById('dangerWords').value = document.getElementById('epDangerWords').value;
+  document.getElementById('mannerisms').value  = document.getElementById('epMannerisms').value;
+  document.getElementById('callName').value    = document.getElementById('epCallName').value;
+  document.getElementById('emoHappy').value    = document.getElementById('epEmoHappy').value;
+  document.getElementById('emoAngry').value    = document.getElementById('epEmoAngry').value;
+  document.getElementById('emoWorried').value  = document.getElementById('epEmoWorried').value;
+  document.getElementById('emoSweet').value    = document.getElementById('epEmoSweet').value;
+  document.getElementById('worldSetting').value = document.getElementById('epWorldSetting').value;
+  document.getElementById('sharedMemory').value = document.getElementById('epSharedMemory').value;
+  document.getElementById('freeText').value    = document.getElementById('epFreeText').value;
+  const name = document.getElementById('charName').value || '推しキャラ';
+  document.getElementById('chatAvatar').textContent = name.charAt(0);
+  document.getElementById('chatName').textContent = name;
+  const tags = [sel.personality, sel.speech, sel.relation].filter(Boolean);
+  document.getElementById('chatPersona').textContent = tags.length ? tags.join(' · ') : 'あなただけの推し';
+  closeEditPanel();
+  showToast('✦ 設定を反映しました');
+}
 function renderMemoryPanel(){
-  const pl=document.getElementById('pinnedList');
-  if(!pinnedMemories.length){pl.innerHTML='<div class="empty-mem">まだピン留めがありません<br>会話中の発言を📌で登録できます</div>';}
-  else{
-    pl.innerHTML='';
-    pinnedMemories.forEach((m,i)=>{
-      const div=document.createElement('div');div.className='memory-item';
-      div.innerHTML=`<span>${m.text}</span><button class="mi-del" onclick="removePinned(${i})">✕</button>`;
-      pl.appendChild(div);
-    });
+  const pl = document.getElementById('pinnedList');
+  if(!pinnedMemories.length) pl.innerHTML = '<div class="empty-mem">まだピン留めがありません<br>会話中の発言を📌で登録できます</div>';
+  else{ pl.innerHTML = ''; pinnedMemories.forEach((m,i) => { const d=document.createElement('div');d.className='memory-item';d.innerHTML=`<span>${m.text}</span><button class="mi-del" onclick="removePinned(${i})">✕</button>`;pl.appendChild(d); }); }
+  const sl = document.getElementById('summaryList');
+  if(!summaries.length) sl.innerHTML = '<div class="empty-mem">まだサマリーがありません<br>20往復ごとに自動生成されます</div>';
+  else{ sl.innerHTML = ''; summaries.forEach(s => { const d=document.createElement('div');d.className='memory-item';d.innerHTML=`<span><strong style="font-size:.63rem;color:var(--lav)">${s.turnRange}</strong><br>${s.text}</span>`;sl.appendChild(d); }); }
+}
+function removePinned(idx){ pinnedMemories.splice(idx,1); renderMemoryPanel(); showToast('ピン留めを削除しました'); }
+
+// ── Save Modal ──
+function openSaveModal(){
+  const smSub = document.getElementById('smSub');
+  const smActions = document.getElementById('smActions');
+  if(currentUser){
+    smSub.textContent = '';
+    smActions.innerHTML = `<button class="sm-save-btn" onclick="doSaveConversation()">✦ 保存する</button><button class="sm-cancel" onclick="closeSaveModal()">今はしない</button>`;
+  } else {
+    smSub.innerHTML = 'ログインすると、会話を保存して<br>いつでも続きを読み返せます';
+    smActions.innerHTML = `<button class="google-btn" onclick="triggerGoogleSave()">${googleSvg()}Googleでログインして保存</button><button class="sm-cancel" onclick="closeSaveModal()">今はしない</button>`;
   }
-  const sl=document.getElementById('summaryList');
-  if(!summaries.length){sl.innerHTML='<div class="empty-mem">まだサマリーがありません<br>20往復ごとに自動で生成されます</div>';}
-  else{
-    sl.innerHTML='';
-    summaries.forEach(s=>{
-      const div=document.createElement('div');div.className='memory-item';
-      div.innerHTML=`<span><strong style="font-size:.7rem;color:var(--lav)">${s.turnRange}</strong><br>${s.text}</span>`;
-      sl.appendChild(div);
-    });
-  }
+  document.getElementById('saveModal').classList.add('open');
+}
+function closeSaveModal(){ document.getElementById('saveModal').classList.remove('open'); }
+function closeSaveModalOutside(e){ if(e.target === document.getElementById('saveModal')) closeSaveModal(); }
+function googleSvg(){ return `<svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>`; }
+
+// ── Pending save (ページリロード後も保存を完了させる) ──
+function storePendingSave(){
+  if(!history.length) return;
+  const data = buildSaveData();
+  localStorage.setItem(PENDING_KEY, JSON.stringify(data));
+}
+function checkPendingSave(){
+  const raw = localStorage.getItem(PENDING_KEY);
+  if(!raw || !currentUser) return;
+  const data = JSON.parse(raw);
+  data.userId = currentUser.id;
+  data.id = Date.now().toString();
+  commitSave(data);
+  localStorage.removeItem(PENDING_KEY);
+  showToast(`✦ ${data.name}との思い出を保存しました`);
+}
+async function triggerGoogleSave(){
+  closeSaveModal();
+  storePendingSave();
+  await doSignInWithGoogle();
 }
 
-function removePinned(idx){
-  pinnedMemories.splice(idx,1);
-  renderMemoryPanel();
-  showToast('ピン留めを削除しました');
-}
-
-/* ── Save / Load ── */
-const SAVE_IDX='oshi_save_index';
-function listIds(){const v=localStorage.getItem(SAVE_IDX);return v?JSON.parse(v):[]}
-function setIds(ids){localStorage.setItem(SAVE_IDX,JSON.stringify(ids))}
-function sp(id){return`oshi_save_${id}`}
-
-function saveConversation(){
-  if(!history.length){showToast('まだ会話がありません');return;}
-  const name=document.getElementById('chatName').textContent;
-  const id=Date.now().toString();
-  const data={
-    id,name,
-    userName:document.getElementById('userName').value||'',
-    pronoun:sel.pronoun,speech:sel.speech,personality:sel.personality,relation:sel.relation,
-    dangerWords:document.getElementById('dangerWords').value,
-    mannerisms:document.getElementById('mannerisms').value,
-    emoHappy:document.getElementById('emoHappy').value,
-    emoAngry:document.getElementById('emoAngry').value,
-    emoWorried:document.getElementById('emoWorried').value,
-    emoSweet:document.getElementById('emoSweet').value,
-    callName:document.getElementById('callName').value,
+// ── localStorage save/load ──
+const SAVE_IDX = 'oshi_save_index';
+function listIds(){ const v = localStorage.getItem(SAVE_IDX); return v ? JSON.parse(v) : []; }
+function setIds(ids){ localStorage.setItem(SAVE_IDX, JSON.stringify(ids)); }
+function sp(id){ return `oshi_save_${id}`; }
+function buildSaveData(){
+  return {
+    id: Date.now().toString(),
+    name: document.getElementById('charName').value || '推しキャラ',
+    userId: currentUser?.id || null,
+    userName: document.getElementById('userName').value || '',
+    pronoun:sel.pronoun, speech:sel.speech, personality:sel.personality, relation:sel.relation,
+    dangerWords: document.getElementById('dangerWords').value,
+    mannerisms:  document.getElementById('mannerisms').value,
+    emoHappy:    document.getElementById('emoHappy').value,
+    emoAngry:    document.getElementById('emoAngry').value,
+    emoWorried:  document.getElementById('emoWorried').value,
+    emoSweet:    document.getElementById('emoSweet').value,
+    callName:    document.getElementById('callName').value,
     worldSetting:document.getElementById('worldSetting').value,
     sharedMemory:document.getElementById('sharedMemory').value,
-    freeText:document.getElementById('freeText').value,
-    setupPins:[...setupPins],
-    pinnedMemories:[...pinnedMemories],
-    summaries:[...summaries],
-    history:[...history],
-    savedAt:new Date().toLocaleString('ja-JP'),
-    msgCount:history.length,
+    freeText:    document.getElementById('freeText').value,
+    setupPins: [...setupPins], pinnedMemories: [...pinnedMemories], summaries: [...summaries],
+    history: [...history],
+    savedAt: new Date().toLocaleString('ja-JP'),
+    msgCount: history.length,
   };
-  localStorage.setItem(sp(id),JSON.stringify(data));
-  const ids=listIds();ids.unshift(id);setIds(ids);
-  showToast(`✦ ${name}との会話を保存しました`);
-  renderSavesList();
 }
-
+function commitSave(data){
+  localStorage.setItem(sp(data.id), JSON.stringify(data));
+  const ids = listIds(); ids.unshift(data.id); setIds(ids);
+}
+function doSaveConversation(){
+  if(!history.length){ showToast('まだ会話がありません'); return; }
+  const data = buildSaveData();
+  commitSave(data);
+  closeSaveModal();
+  showToast(`✦ ${data.name}との思い出を保存しました`);
+}
 function loadConversation(id){
-  const raw=localStorage.getItem(sp(id));if(!raw)return;
-  const d=JSON.parse(raw);
-  document.getElementById('charName').value=d.name||'';
-  document.getElementById('userName').value=d.userName||'';
-  document.getElementById('dangerWords').value=d.dangerWords||'';
-  document.getElementById('mannerisms').value=d.mannerisms||'';
-  document.getElementById('emoHappy').value=d.emoHappy||'';
-  document.getElementById('emoAngry').value=d.emoAngry||'';
-  document.getElementById('emoWorried').value=d.emoWorried||'';
-  document.getElementById('emoSweet').value=d.emoSweet||'';
-  document.getElementById('callName').value=d.callName||'';
-  document.getElementById('worldSetting').value=d.worldSetting||'';
-  document.getElementById('sharedMemory').value=d.sharedMemory||'';
-  document.getElementById('freeText').value=d.freeText||'';
-  sel={pronoun:d.pronoun,speech:d.speech,personality:d.personality,relation:d.relation};
-  const MAP={pronoun:'pronounTags',speech:'speechTags',personality:'personalityTags',relation:'relationTags'};
-  Object.entries(MAP).forEach(([k,cid])=>{
-    document.getElementById(cid).querySelectorAll('.tag').forEach(t=>t.classList.toggle('on',t.textContent===sel[k]));
-  });
-  setupPins=d.setupPins||[];renderSetupPins();
-  startChat();
-  history=[...d.history];
-  pinnedMemories=d.pinnedMemories||[];
-  summaries=d.summaries||[];
-  const msgs=document.getElementById('messages');msgs.innerHTML='';
-  d.history.forEach(m=>appendMsg(m.role==='user'?'user':'assistant',m.content));
-  closePanel();
-  showToast(`${d.name}との思い出を読み込みました`);
+  const raw = localStorage.getItem(sp(id)); if(!raw) return;
+  const d = JSON.parse(raw);
+  document.getElementById('charName').value    = d.name || '';
+  document.getElementById('userName').value    = d.userName || '';
+  document.getElementById('dangerWords').value = d.dangerWords || '';
+  document.getElementById('mannerisms').value  = d.mannerisms || '';
+  document.getElementById('emoHappy').value    = d.emoHappy || '';
+  document.getElementById('emoAngry').value    = d.emoAngry || '';
+  document.getElementById('emoWorried').value  = d.emoWorried || '';
+  document.getElementById('emoSweet').value    = d.emoSweet || '';
+  document.getElementById('callName').value    = d.callName || '';
+  document.getElementById('worldSetting').value = d.worldSetting || '';
+  document.getElementById('sharedMemory').value = d.sharedMemory || '';
+  document.getElementById('freeText').value    = d.freeText || '';
+  sel = {pronoun:d.pronoun, speech:d.speech, personality:d.personality, relation:d.relation};
+  initTags();
+  history = [...d.history]; pinnedMemories = d.pinnedMemories||[]; summaries = d.summaries||[];
+  setupPins = d.setupPins||[]; renderSetupPins();
+  const name = d.name || '推しキャラ';
+  document.getElementById('chatAvatar').textContent = name.charAt(0);
+  document.getElementById('chatName').textContent = name;
+  const tags = [sel.personality, sel.speech, sel.relation].filter(Boolean);
+  document.getElementById('chatPersona').textContent = tags.length ? tags.join(' · ') : 'あなただけの推し';
+  showScreen('chatScreen');
+  const msgs = document.getElementById('messages'); msgs.innerHTML = '';
+  d.history.forEach(m => appendMsg(m.role === 'user' ? 'user' : 'assistant', m.content));
+  showToast(`${name}との思い出を読み込みました`);
 }
-
-function deleteConversation(id,e){
+function deleteConversation(id, e){
   e.stopPropagation();
-  localStorage.removeItem(sp(id));
-  setIds(listIds().filter(k=>k!==id));
-  renderSavesList();showToast('削除しました');
+  localStorage.removeItem(sp(id)); setIds(listIds().filter(k => k !== id));
+  renderOshiList(); showToast('削除しました');
 }
-
-function renderSavesList(){
-  const ids=listIds();const el=document.getElementById('hpList');
-  if(!ids.length){el.innerHTML='<div class="empty-hist">まだ保存された会話はありません ✦</div>';return;}
-  el.innerHTML='';
-  ids.forEach(id=>{
-    const raw=localStorage.getItem(sp(id));if(!raw)return;
-    const d=JSON.parse(raw);
-    const preview=d.history.find(m=>m.role==='assistant')?.content||'';
-    const short=preview.length>38?preview.slice(0,38)+'…':preview;
-    const item=document.createElement('div');item.className='save-item';
-    item.innerHTML=`
-      <div class="si-name">${d.name}</div>
-      <div class="si-meta">${d.savedAt} · ${Math.floor(d.msgCount/2)}往復</div>
-      <div class="si-preview">"${short}"</div>
-      <div class="si-actions">
-        <button class="si-btn load" onclick="loadConversation('${id}')">続きを読む</button>
-        <button class="si-btn del" onclick="deleteConversation('${id}',event)">削除</button>
-      </div>`;
+function renderOshiList(){
+  const ids = listIds(); const el = document.getElementById('oshiList');
+  const uid = currentUser?.id || null;
+  const filtered = uid ? ids.filter(id => { const r=localStorage.getItem(sp(id)); if(!r)return false; return JSON.parse(r).userId===uid; }) : ids;
+  if(!filtered.length){ el.innerHTML = '<div class="empty-mem">まだ保存された推しはいません ✦</div>'; return; }
+  el.innerHTML = '';
+  filtered.forEach(id => {
+    const raw = localStorage.getItem(sp(id)); if(!raw) return;
+    const d = JSON.parse(raw);
+    const preview = d.history.find(m => m.role === 'assistant')?.content || '';
+    const short = preview.length > 36 ? preview.slice(0,36)+'…' : preview;
+    const item = document.createElement('div'); item.className = 'oshi-card';
+    item.innerHTML = `<div class="oc-name">${d.name}</div><div class="oc-meta">${d.savedAt} · ${Math.floor(d.msgCount/2)}往復</div><div class="oc-preview">"${short}"</div><div class="oc-actions"><button class="oc-btn load" onclick="loadConversation('${id}')">続きを読む</button><button class="oc-btn del" onclick="deleteConversation('${id}',event)">削除</button></div>`;
     el.appendChild(item);
   });
 }
 
-/* ── Toast ── */
-function showToast(msg){
-  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2400);
-}
-
-/* ── Auth ── */
-async function signInWithGoogle(){
-  const {error}=await supabaseClient.auth.signInWithOAuth({
-    provider:'google',
-    options:{redirectTo:'https://oshi-chat.vercel.app'}
+// ── Auth ──
+async function doSignInWithGoogle(){
+  const {error} = await supabaseClient.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: 'https://oshi-chat.vercel.app' }
   });
-  if(error)showToast('ログインに失敗しました');
+  if(error) showToast('ログインに失敗しました');
 }
-
-async function signOut(){
+async function doSignOut(){
   await supabaseClient.auth.signOut();
+  currentUser = null;
+  showScreen('lpScreen');
+  showToast('ログアウトしました');
+}
+function handleLoginLink(){
+  doSignInWithGoogle();
 }
 
-// implicitフローではURLハッシュからトークンを同期取得するため
-// INITIAL_SESSION発火時点でセッションが確定している
-supabaseClient.auth.onAuthStateChange((event,session)=>{
-  currentUser=session?.user??null;
-  if(event==='SIGNED_IN'||event==='TOKEN_REFRESHED'||(event==='INITIAL_SESSION'&&currentUser)){
-    document.querySelectorAll('.user-email').forEach(el=>el.textContent=currentUser.email||'');
-    document.getElementById('loginScreen').classList.remove('active');
-    if(!document.getElementById('chatScreen').classList.contains('active')){
-      document.getElementById('setupScreen').classList.add('active');
+// ログイン後の画面制御（保存modal経由のリダイレクトを含む）
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  const wasSignedIn = !!currentUser;
+  currentUser = session?.user ?? null;
+
+  if(event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || (event === 'INITIAL_SESSION' && currentUser)){
+    document.getElementById('homeGreeting').textContent = `おかえりなさい、${currentUser.email || ''}`;
+    // pending saveがあれば完了させる
+    checkPendingSave();
+    // LPにいる場合のみHomeへ（チャット中はそのまま）
+    if(document.getElementById('lpScreen').classList.contains('active')){
+      goHome();
     }
-  } else if(event==='SIGNED_OUT'||(event==='INITIAL_SESSION'&&!currentUser)){
-    document.getElementById('loginScreen').classList.add('active');
-    document.getElementById('setupScreen').classList.remove('active');
-    document.getElementById('chatScreen').classList.remove('active');
   }
 });
 
-/* ── Init ── */
+// ── Toast ──
+function showToast(msg){
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ── Init ──
 makeStars();
-makeTags('pronounTags',PRONOUNS,'pronoun');
-makeTags('speechTags',SPEECH,'speech');
-makeTags('personalityTags',PERSONALITY,'personality');
-makeTags('relationTags',RELATIONS,'relation');
+makeDemoBg();
+initTags();
 addSetupPin();
 </script>
 </body>
