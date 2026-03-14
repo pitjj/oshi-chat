@@ -615,7 +615,9 @@ function startChat(){
 // ── Input ──
 let isComposing = false;
 function autoResize(el){ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 100) + 'px'; }
-function handleKey(e){ if(e.key === 'Enter' && !e.shiftKey && !isComposing){ e.preventDefault(); sendMessage(); } }
+// e.isComposing: Chromeではcompositionendがkeydownより先に発火するため
+// カスタムisComposingだけでは変換確定EnterをブロックできないのでAND条件で両方チェック
+function handleKey(e){ if(e.key === 'Enter' && !e.shiftKey && !isComposing && !e.isComposing){ e.preventDefault(); sendMessage(); } }
 
 // ── Messages ──
 function appendMsg(role, content, isPinned=false){
