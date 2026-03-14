@@ -369,7 +369,9 @@ textarea{resize:none;line-height:1.75}
 // ── Supabase config（YOUR_... の部分を実際の値に置き換えてください）──
 const SUPABASE_URL = 'https://fpqnllptcuqsigurhsji.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcW5sbHB0Y3Vxc2lndXJoc2ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0NjQ3ODgsImV4cCI6MjA4OTA0MDc4OH0.4P0yfBwUmCtrvknka1h4O8Fsww_ja6rxrcW_hsKHij';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { flowType: 'implicit', detectSessionInUrl: true, persistSession: true }
+});
 
 const API_ENDPOINT = '/api/chat';
 const SUMMARY_INTERVAL = 20; // 何往復ごとにサマリー生成するか
@@ -785,23 +787,6 @@ function showToast(msg){
 }
 
 /* ── Auth ── */
-let authReady = false;
-
-function applyAuthState(user){
-  currentUser = user;
-  if(currentUser){
-    document.querySelectorAll('.user-email').forEach(el=>el.textContent=currentUser.email||'');
-    document.getElementById('loginScreen').classList.remove('active');
-    if(!document.getElementById('chatScreen').classList.contains('active')){
-      document.getElementById('setupScreen').classList.add('active');
-    }
-  } else {
-    document.getElementById('loginScreen').classList.add('active');
-    document.getElementById('setupScreen').classList.remove('active');
-    document.getElementById('chatScreen').classList.remove('active');
-  }
-}
-
 async function signInWithGoogle(){
   const {error}=await supabaseClient.auth.signInWithOAuth({
     provider:'google',
@@ -814,16 +799,21 @@ async function signOut(){
   await supabaseClient.auth.signOut();
 }
 
-// onAuthStateChange はinitial check完了後のみ画面制御する
-supabaseClient.auth.onAuthStateChange((_event,session)=>{
-  if(!authReady) return;
-  applyAuthState(session?.user??null);
-});
-
-// getSession()でOAuthコード交換を含む初期セッションを確定してから画面を決定する
-supabaseClient.auth.getSession().then(({data:{session}})=>{
-  authReady = true;
-  applyAuthState(session?.user??null);
+// implicitフローではURLハッシュからトークンを同期取得するため
+// INITIAL_SESSION発火時点でセッションが確定している
+supabaseClient.auth.onAuthStateChange((event,session)=>{
+  currentUser=session?.user??null;
+  if(event==='SIGNED_IN'||event==='TOKEN_REFRESHED'||(event==='INITIAL_SESSION'&&currentUser)){
+    document.querySelectorAll('.user-email').forEach(el=>el.textContent=currentUser.email||'');
+    document.getElementById('loginScreen').classList.remove('active');
+    if(!document.getElementById('chatScreen').classList.contains('active')){
+      document.getElementById('setupScreen').classList.add('active');
+    }
+  } else if(event==='SIGNED_OUT'||(event==='INITIAL_SESSION'&&!currentUser)){
+    document.getElementById('loginScreen').classList.add('active');
+    document.getElementById('setupScreen').classList.remove('active');
+    document.getElementById('chatScreen').classList.remove('active');
+  }
 });
 
 /* ── Init ── */
