@@ -339,7 +339,7 @@ textarea{resize:none;line-height:1.75}
     <div class="empty-state"><span class="eicon">✦</span><p>推しに声をかけてみよう<br>あなたを待っています</p></div>
   </div>
   <div class="input-area">
-    <textarea class="msg-input" id="msgInput" placeholder="メッセージを入力... (Enterで送信)" rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <textarea class="msg-input" id="msgInput" placeholder="メッセージを入力..." rows="1" oninput="autoResize(this)" oncompositionstart="isComposing=true" oncompositionend="isComposing=false"></textarea>
     <button class="send-btn" id="sendBtn" onclick="sendMessage()">
       <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
     </button>
@@ -613,8 +613,8 @@ function startChat(){
 }
 
 // ── Input ──
+let isComposing = false;
 function autoResize(el){ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 100) + 'px'; }
-function handleKey(e){ if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); } }
 
 // ── Messages ──
 function appendMsg(role, content, isPinned=false){
@@ -672,7 +672,7 @@ async function sendMessage(){
   if(isLoading) return;
   const input = document.getElementById('msgInput');
   const text = input.value.trim(); if(!text) return;
-  input.value = ''; input.style.height = 'auto';
+  input.value = ''; autoResize(input);
   appendMsg('user', text);
   history.push({role:'user', content:text});
   isLoading = true; document.getElementById('sendBtn').disabled = true;
