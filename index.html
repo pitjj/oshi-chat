@@ -785,10 +785,27 @@ function showToast(msg){
 }
 
 /* ── Auth ── */
+let authReady = false;
+
+function applyAuthState(user){
+  currentUser = user;
+  if(currentUser){
+    document.querySelectorAll('.user-email').forEach(el=>el.textContent=currentUser.email||'');
+    document.getElementById('loginScreen').classList.remove('active');
+    if(!document.getElementById('chatScreen').classList.contains('active')){
+      document.getElementById('setupScreen').classList.add('active');
+    }
+  } else {
+    document.getElementById('loginScreen').classList.add('active');
+    document.getElementById('setupScreen').classList.remove('active');
+    document.getElementById('chatScreen').classList.remove('active');
+  }
+}
+
 async function signInWithGoogle(){
   const {error}=await supabaseClient.auth.signInWithOAuth({
     provider:'google',
-    options:{redirectTo:'https://oshi-chat.vercel.app/'}
+    options:{redirectTo:'https://oshi-chat.vercel.app'}
   });
   if(error)showToast('ログインに失敗しました');
 }
@@ -797,20 +814,16 @@ async function signOut(){
   await supabaseClient.auth.signOut();
 }
 
+// onAuthStateChange はinitial check完了後のみ画面制御する
 supabaseClient.auth.onAuthStateChange((_event,session)=>{
-  currentUser=session?.user??null;
-  if(currentUser){
-    const email=currentUser.email||'';
-    document.querySelectorAll('.user-email').forEach(el=>el.textContent=email);
-    if(document.getElementById('loginScreen').classList.contains('active')){
-      document.getElementById('loginScreen').classList.remove('active');
-      document.getElementById('setupScreen').classList.add('active');
-    }
-  } else {
-    document.getElementById('loginScreen').classList.add('active');
-    document.getElementById('setupScreen').classList.remove('active');
-    document.getElementById('chatScreen').classList.remove('active');
-  }
+  if(!authReady) return;
+  applyAuthState(session?.user??null);
+});
+
+// getSession()でOAuthコード交換を含む初期セッションを確定してから画面を決定する
+supabaseClient.auth.getSession().then(({data:{session}})=>{
+  authReady = true;
+  applyAuthState(session?.user??null);
 });
 
 /* ── Init ── */
