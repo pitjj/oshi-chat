@@ -7,6 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=Zen+Kaku+Gothic+New:wght@300;400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -158,6 +159,17 @@ textarea{resize:none;line-height:1.75}
 
 /* summary badge */
 .summary-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.7rem;color:var(--lav);background:rgba(184,172,223,.08);border:1px solid var(--bdr);border-radius:20px;padding:.25rem .7rem;margin:0 auto .5rem;opacity:.7}
+
+/* ── Login ── */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem 1rem;position:relative;z-index:1}
+.login-card{text-align:center;max-width:380px;width:100%}
+.google-btn{width:100%;padding:.85rem 1rem;border:1px solid var(--bdr);border-radius:12px;background:rgba(255,255,255,.05);color:#f0eaff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.65rem;transition:all .2s;margin-top:.5rem}
+.google-btn:hover{border-color:var(--pink);background:rgba(232,160,196,.08)}
+.google-btn svg{flex-shrink:0}
+/* ── User bar ── */
+.user-bar{display:flex;align-items:center;justify-content:flex-end;gap:.65rem;padding:.5rem 0;margin-bottom:.25rem;font-size:.72rem;color:var(--lav);opacity:.75}
+.user-bar button{background:none;border:1px solid var(--bdr);border-radius:6px;color:var(--lav);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.68rem;padding:.2rem .55rem;cursor:pointer;transition:all .2s}
+.user-bar button:hover{border-color:var(--pink);color:var(--pink)}
 </style>
 </head>
 <body>
@@ -199,11 +211,36 @@ textarea{resize:none;line-height:1.75}
   </div>
 </div>
 
+<!-- ── Login Screen ── -->
+<div class="screen active" id="loginScreen">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="logo" style="margin-bottom:2rem">
+        <div class="logo-title">推しとのトキメキ</div>
+        <div class="logo-sub">✦ &nbsp;あなただけの推しを、今すぐ生み出して&nbsp; ✦</div>
+      </div>
+      <div class="card" style="padding:1.75rem 1.5rem">
+        <p style="font-size:.85rem;color:var(--lav);line-height:1.95;margin-bottom:1.5rem;opacity:.9">ログインして、あなただけの推しとの<br>特別な時間をはじめましょう</p>
+        <button class="google-btn" onclick="signInWithGoogle()">
+          <svg width="18" height="18" viewBox="0 0 18 18">
+            <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+            <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/>
+          </svg>
+          Googleでログイン
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── Setup Screen ── -->
-<div class="screen active" id="setupScreen">
+<div class="screen" id="setupScreen">
   <div class="setup-scroll">
     <div class="setup-inner">
 
+      <div class="user-bar"><span class="user-email"></span><button onclick="signOut()">ログアウト</button></div>
       <div class="logo">
         <div class="logo-title">推しとのトキメキ</div>
         <div class="logo-sub">✦ &nbsp;あなただけの推しを、今すぐ生み出して&nbsp; ✦</div>
@@ -313,6 +350,7 @@ textarea{resize:none;line-height:1.75}
     </div>
     <div class="hdr-btns">
       <button class="hbtn" onclick="openPanel()">📖 記録</button>
+      <button class="hbtn" onclick="signOut()">ログアウト</button>
       <button class="hbtn" onclick="goBack()">← 設定</button>
     </div>
   </div>
@@ -328,6 +366,11 @@ textarea{resize:none;line-height:1.75}
 </div>
 
 <script>
+// ── Supabase config（YOUR_... の部分を実際の値に置き換えてください）──
+const SUPABASE_URL = 'https://fpqnllptcuqsigurhsji.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcW5sbHB0Y3Vxc2lndXJoc2ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0NjQ3ODgsImV4cCI6MjA4OTA0MDc4OH0.4P0yfBwUmCtrvknka1h4O8Fsww_ja6rxrcW_hsKHij';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const API_ENDPOINT = '/api/chat';
 const SUMMARY_INTERVAL = 20; // 何往復ごとにサマリー生成するか
 
@@ -336,6 +379,7 @@ const SPEECH     = ['タメ口','丁寧語','古風・堅物','ツンデレ語�
 const PERSONALITY= ['ツンデレ','クール系','元気・明るい','ミステリアス','優しいお兄さん系','甘えさせてくれる','ヤンデレ気味','オラオラ系'];
 const RELATIONS  = ['幼馴染','クラスメート','先輩','後輩','恋人','片思い中の恋人','ライバル','主人と従者（従者側）'];
 
+let currentUser = null;
 let sel = {pronoun:null,speech:null,personality:null,relation:null};
 let history = [];
 let isLoading = false;
@@ -739,6 +783,35 @@ function showToast(msg){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2400);
 }
+
+/* ── Auth ── */
+async function signInWithGoogle(){
+  const {error}=await supabaseClient.auth.signInWithOAuth({
+    provider:'google',
+    options:{redirectTo:window.location.origin+window.location.pathname}
+  });
+  if(error)showToast('ログインに失敗しました');
+}
+
+async function signOut(){
+  await supabaseClient.auth.signOut();
+}
+
+supabaseClient.auth.onAuthStateChange((_event,session)=>{
+  currentUser=session?.user??null;
+  if(currentUser){
+    const email=currentUser.email||'';
+    document.querySelectorAll('.user-email').forEach(el=>el.textContent=email);
+    if(document.getElementById('loginScreen').classList.contains('active')){
+      document.getElementById('loginScreen').classList.remove('active');
+      document.getElementById('setupScreen').classList.add('active');
+    }
+  } else {
+    document.getElementById('loginScreen').classList.add('active');
+    document.getElementById('setupScreen').classList.remove('active');
+    document.getElementById('chatScreen').classList.remove('active');
+  }
+});
 
 /* ── Init ── */
 makeStars();
